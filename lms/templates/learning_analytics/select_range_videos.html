@@ -1,0 +1,71 @@
+<%! from django.utils.translation import ugettext as _ %>
+<%page args="select_id, video_names, video_ids"/>
+
+% if video_names is not None:
+<form class="inputtype option-input ">
+  <select name = "videoselect[]" id="${select_id}" multiple="multiple" size="8" style='height: 60%;'>
+    % for video_name, video_id in zip(video_names, video_ids):
+	    	<option${_(" value=\"{vid_id}\">{vid}").format(vid=video_name, vid_id=video_id)}</option>
+    % endfor
+  </select>
+</form>
+<button onclick="rangevideos()">Draw again</button>
+% else:
+<p> This course contains no videos. </p>
+% endif
+<p>Hold down the Ctrl (windows) / Command (Mac) button to select multiple videos.</p>
+<script>
+
+function getSelectedOptions(sel) {
+    var opt;
+    var opts = new Array ();
+    var option;
+    // options in select list
+    for (var i=0, len=sel.options.length; i<len; i++) {
+        opt = sel.options[i].label;
+        option=sel.options[i];
+        // check if selected        
+        if ( option.selected ) {
+            // add to array of option elements 
+            opts.push(opt);
+        }
+    }
+    // return array containing selected option elements
+    return opts;
+}
+
+function rangevideos(){
+	
+	document.getElementById('${select_id}').multiple=true;//set up of multiple select
+	var selectOptions = document.getElementById('${select_id}');//get all videos labels
+	var opts=getSelectedOptions(selectOptions);// get only the select videos
+	//read of the localStorage
+	var json = JSON.parse(localStorage['foo']);
+    var chart_number = 1;
+	var limitvideos=8; // limit of videos to select
+	// if you select a range of videos valid
+	if (opts.length<=limitvideos){
+		var jsonN = new Array ();
+		var cont=1;
+		// You get the header of graphic
+		jsonN [0] = json[0]
+		for (var i=1, len=json.length; i<len; i++) {
+			for (var j=0, lon=opts.length; j<lon; j++) {
+				//You compare the list of videos with the selected
+				//alert(json[i][0]);
+				var n = (json[i][0]).localeCompare(opts[j]);
+				if (n==0){
+					//Assign the value of the video selected
+					jsonN [cont] = json[i];
+					cont= 1 + cont;
+				}
+			}
+		}
+	    reDrawChart(chart_number, jsonN);
+	}else{
+		alert("The maximum selection of videos is eight");
+	}
+	
+}
+
+</script>

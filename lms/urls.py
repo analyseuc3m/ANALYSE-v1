@@ -666,6 +666,13 @@ if settings.FEATURES["ENABLE_TEAMS"]:
             name='teams_endpoints',
         ),
     )
+# Learning analytics module if is enabled
+if settings.FEATURES.get('ENABLE_LEARNING_ANALYTICS'):
+    urlpatterns += (
+	    url(r'^courses/{}/learning_analytics$'.format(settings.COURSE_ID_PATTERN),
+	    'learning_analytics.views.index', name="learning_analytics"),
+	    url(r'^courses/learning_analytics/chart_update$',
+	    'learning_analytics.views.chart_update', name="chart_ajax"),)
 
 # allow course staff to change to student view of courseware
 if settings.FEATURES.get('ENABLE_MASQUERADE'):

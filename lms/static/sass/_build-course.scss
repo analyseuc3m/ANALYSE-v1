@@ -64,6 +64,10 @@
 // search
 @import 'search/_search';
 
+// Learning analytics (se incluye el modulo de LA directamente, en la version nueva no se realizan comprobaciones de si esta habilitada la pestaña)
+// import LA Sass
+@import "course/learning-analytics/learning_analytics";
+
 // responsive
 @import 'base/layouts'; // temporary spot for responsive course
 

@@ -1,0 +1,33 @@
+<%namespace name="video_daily" file="/learning_analytics/video_daily.js"/>
+<script type="text/javascript"> ${video_daily.body(vid_and_prob_daily_time)} </script>
+
+
+<section>
+<div class="sidebar">
+    <h2>Daily Time on Problems and Videos </h2>
+    % if instructor_access or staff_access:
+    <p>
+        This visualization shows the time spent in problems (green) and watching videos (blue) per each day. You can filter by all the students or each student individually.
+    </p>
+    <br/>
+    <h5>Options</h5>
+    % else:
+    <p>
+        This visualization shows the time that you have spent doing problems (green) and watching videos (blue) per each day of the course.
+    </p>
+    % endif
+    <%include file="/learning_analytics/select_student.html" args="select_id='student_select5', usernames_in=usernames_in" /> 
+    <h5>Range of dates</h5>
+    <%include file="/learning_analytics/select_dates.html" args="select_id='dates_select5'" />           
+</div>
+<!--Div that will hold the stacked bar chart-->
+    <div class="graph" id="vid_prob_daily_chart">
+    </div>
+    <div class="legend">
+       <h3 id="video_progress_legend_title">Daily Time</h3>
+        <ul>
+            <li><span style='background:${video_activity};'></span>Video Time</li>
+            <li><span style='background:${problem_activity};'></span>Problem Time</li>
+        </ul>
+    </div>
+</section>

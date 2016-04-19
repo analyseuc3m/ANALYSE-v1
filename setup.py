@@ -35,6 +35,7 @@ setup(
             "static_tab = xmodule.tabs:StaticTab",
             "syllabus = lms.djangoapps.courseware.tabs:SyllabusTab",
             "teams = lms.djangoapps.teams.plugins:TeamsTab",
+	    "learning_analytics = lms.djangoapps.courseware.tabs:LATab",
             "textbooks = lms.djangoapps.courseware.tabs:TextbookTabs",
             "wiki = lms.djangoapps.course_wiki.tab:WikiTab",
         ],

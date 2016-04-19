@@ -1,0 +1,33 @@
+<%namespace name="video_progress" file="/learning_analytics/video_progress.js"/>
+<script type="text/javascript"> ${video_progress.body(video_prog_json)} </script>
+
+
+<section>
+	<div class="sidebar">
+	    <h2>Video Time Watched</h2>
+	    % if instructor_access or staff_access:
+	    <p>
+	        This visualization shows in dark blue the percentage of different video watched (it does not count if the same parts are watched several times, the max. is the 100% of the video) and in light blue the percentage of total video watched (total amount of time spent compared to the length of the video in percentage). You can filter by all the students or each student individually.
+	    </p>
+	    <br/>
+	    <h5>Options</h5>
+	    % else:
+	    <p>
+	        This visualization shows in dark blue the percentage of different video watched (it does not count if the same parts are watched several times, the max. is the 100% of the video) and in light blue the percentage of total video watched (total amount of time spent compared to the length of the video in percentage).
+	    </p>
+	    % endif                                                           
+	    <%include file="/learning_analytics/select_student.html" args="select_id='student_select1', usernames_in=usernames_in" />
+	    <h5>Range of videos</h5>
+        <%include file="/learning_analytics/select_range_videos.html" args="select_id='video_select1', video_names=video_names, video_ids=video_ids" />
+	</div>
+	<!--Div that will hold the stacked bar chart-->
+	<div class="graph" id="video_prog_chart">
+	</div>
+	<div class="legend">
+	   <h3 id="video_progress_legend_title">Video Time Watched</h3>
+        <ul>
+            <li><span style='background:${video_repetition};'></span>Different Video Time</li>
+            <li><span style='background:${video_activity};'></span>Total Video Time</li>
+        </ul>
+	</div>
+</section>

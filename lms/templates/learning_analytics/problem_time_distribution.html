@@ -1,0 +1,34 @@
+<%namespace name="total_problem_time" file="/learning_analytics/per_problem_time.js"/>
+
+<script type="text/javascript"> ${total_problem_time.body(problem_distrib_json)} </script>
+
+   <section>
+	   <div class="sidebar">
+	       <h2>Problem Time Distribution </h2>
+	       % if instructor_access or staff_access:
+	       <p>
+	           This visualization shows the percentage of time invested in minutes in each one of the problems of the course. You can filter by all the students or each student individually.                 
+	       </p>
+	       <br/>
+	       <h5>Options</h5>
+	       % else:
+	       <p>
+	           This visualization shows the percentage of time invested in minutes by you, in each one of the problems of the course.
+	       </p>
+	       % endif
+	       
+	       
+	       <%include file="/learning_analytics/select_student.html" args="select_id='student_select3', usernames_in=usernames_in" />
+		   <h5>Range of problems</h5>
+		   <%include file="/learning_analytics/select_range_problems.html" args="select_id='problem_select1', problem_names=problem_names_sorted, problem_ids=problem_ids" />
+	   </div>
+	   <!--Div that will hold the stacked bar chart-->
+	   <div class="graph" id="per_problem_time">
+	   </div>
+	   <div class="legend">
+		   <h3 id="per_problem_time_legend_title">Problem time</h3>
+		   <ul>
+			   <li><span style='background:${problem_activity};'></span>Percentage of time </li>
+		   </ul>
+		</div>
+   </section>

@@ -87,6 +87,22 @@ class ProgressTab(EnrolledTab):
             return False
         return not course.hide_progress_tab
 
+class LATab(CourseTab):
+    
+    #A tab containing learning analytics module.
+    type = 'learning_analytics'
+    name = 'learning_analytics'
+    title = ugettext_noop('Learning analytics') 
+    view_name = 'learning_analytics'
+    #is_movable = False
+    priority = 50
+    #is_default = False
+    #is_hideable = True
+    print "Learning analytics"
+
+    @classmethod
+    def is_enabled(cls, course, user=None):
+        return settings.FEATURES.get('ENABLE_LEARNING_ANALYTICS', False)
 
 class TextbookTabsBase(CourseTab):
     """

@@ -1,0 +1,34 @@
+<%namespace name="total_video_time" file="/learning_analytics/all_video_time.js"/>           
+<script type="text/javascript"> ${total_video_time.body(video_distrib_json)} </script>            
+
+            <section>
+                <div class="sidebar">
+                    <h2>Video Time Distribution</h2>
+                    % if instructor_access or staff_access:
+                    <p>
+                        This visualization shows the percentage of time invested in each one of the videos of the course. In addition, you can put the mouse over each slice to read the amount of minutes spent in the video. You can filter by all the students or each student individually.
+                    </p>
+                    <br/>
+                    <h5>Options</h5>
+                    % else:
+                    <p>
+                        This visualization shows the percentage of time invested by you in each one of the videos of the course. In addition, you can put the mouse over each slice to read the amount of seconds spent in the video.
+                    </p>
+                    <br/>
+                    % endif
+
+
+                    <%include file="/learning_analytics/select_student.html" args="select_id='student_select2', usernames_in=usernames_in" />
+                    <h5>Range of videos</h5>
+                    <%include file="/learning_analytics/select_range_video2.html" args="select_id='video_select2', video_names_sort=video_names, video_ids_sort=video_ids" />
+                </div>
+                <!--Div that will hold the stacked bar chart-->
+                <div class="graph" id="all_video_time">
+                </div>
+                <div class="legend">
+                   <h3 id="all_video_time_legend_title">Video time</h3>
+                    <ul>
+                        <li><span style='background:${video_activity};'></span>Percentage of time </li>
+                    </ul>
+                </div>
+            </section>

@@ -1,0 +1,104 @@
+<%! from django.utils.translation import ugettext as _ %>
+<%page args="select_id, problem_names,problem_ids"/>
+
+% if video_names is not None:
+<form class="inputtype option-input ">
+  <select name = "problemselect[]" id="${select_id}" multiple="multiple" size="8" style='height: 60%;'>
+    % for problem_name, problem_id in zip(problem_names, problem_ids):
+	    	<option${_(" value=\"{prob_id}\">{prob}").format(prob=problem_name, prob_id=problem_id)}</option>
+    % endfor
+  </select>
+</form>
+<button onclick="rangeproblems()">Draw again</button>
+% else:
+<p> This course contains no videos. </p>
+% endif
+<p>Hold down the Ctrl (windows) / Command (Mac) button to select multiple videos.</p>
+<script>
+
+function getSelectedOptions(sel) {
+    var opt;
+    var opts = new Array ();
+    var option;
+    // options in select list
+    for (var i=0, len=sel.options.length; i<len; i++) {
+        opt = sel.options[i].label;
+        option=sel.options[i];
+        // check if selected
+        if ( option.selected ) {
+            // add to array of option elements
+            opts.push(opt);
+        }
+    }
+    // return array containing selected option elements
+    return opts;
+}
+
+function rangeproblems(){
+
+	document.getElementById('${select_id}').multiple=true;//set up of multiple select
+	var selectOptions = document.getElementById('${select_id}');//get all videos labels
+	console.log(selectOptions);
+	var opts=getSelectedOptions(selectOptions);// get only the select videos
+	//read of the localStorage
+	var json1 = JSON.parse(localStorage['dateJSON1']);
+
+	json1[0][2]={type: 'string', role: 'tooltip'};
+	var vectorValues = [];
+	var sumvalues =0;
+	for (var i=1;i<json1.length;i++){
+        vectorValues[i-1]=json1[i][1];
+        sumvalues=sumvalues+json1[i][1];
+    }
+
+    var problem_names_sorted=${problem_names_sorted};
+    var json = [];
+    var cont=1;
+    json [0] = json1[0];
+    for (var j=0; j<problem_names_sorted.length; j++) {
+	    for (var i=1;i<json1.length; i++) {
+	        var n = (json1[i][0]).localeCompare(problem_names_sorted[j]);
+            if (n==0){
+                //Assign the value of the video selected
+                json [cont] = json1[i];
+                cont= 1 + cont;
+            }
+	    }
+	}
+
+	for (var j=1;j<json.length;j++){
+        json[j][1]=(json[j][1]/sumvalues)*100;
+        json[j][2]= vectorValues[j-1] + ' min' + '\n' + (json[j][1].toFixed(2)) +' %';
+
+    }
+
+    var chart_number = 7;
+	var limitproblems=8; // limit of videos to select
+	// if you select a range of videos valid
+	if (opts.length<=limitproblems){
+		var jsonN = new Array ();
+		var cont=1;
+		// You get the header of graphic
+		jsonN [0] = json[0]
+		for (var i=1, len=json.length; i<len; i++) {
+			for (var j=0, lon=opts.length; j<lon; j++) {
+				//You compare the list of videos with the selected
+				//alert(json[i][0]);
+				var n = (json[i][0]).localeCompare(opts[j]);
+				if (n==0){
+					//Assign the value of the video selected
+					jsonN [cont] = json[i];
+					cont= 1 + cont;
+				}
+			}
+		}
+		console.log('jsonN');
+		console.log(jsonN);
+	    reDrawChart(chart_number, jsonN);
+	}else{
+		alert("The maximum selection of problems is eight");
+	}
+
+}
+
+</script>

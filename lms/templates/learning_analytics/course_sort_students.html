@@ -1,0 +1,30 @@
+<%namespace name='static' file='/static_content.html'/>
+
+<!--Load the AJAX API-->
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<!--Load test graph -->
+<%block name="js_extra">
+<script type="text/javascript" src="${static.url('js/learning_analytics/course_sort_students.js')}"></script>
+</%block>
+<script>var SORT_STD_DUMP='${sort_std_dump}';</script>
+
+<section>
+	<div class="sidebar">
+		<h2>Course Summary</h2>
+		<p>
+			This visualization shows the percentage of students which have achieved proficiency, passed, failed or not accessed each category of resource in the course. Click on one of the bars in order to see the results decomposed in each item within the category.
+		</p>
+	</div>
+	<!--Div that will hold the stacked bar chart-->
+	<div class="graph" id="chart_course_sort_students"></div>
+	
+	<div class="legend">
+		<h3 id="legend_title"></h3>
+		<ul>
+			<li><span style='background:${color_prof};'></span>Proficiency</li>
+			<li><span style='background:${color_ok};'></span>OK</li>
+			<li><span style='background:${color_fail};'></span>Fail</li>
+			<li><span style='background:${color_not};'></span>Not done</li>
+		</ul>
+	</div>
+</section>

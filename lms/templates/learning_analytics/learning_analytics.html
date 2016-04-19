@@ -1,0 +1,170 @@
+## mako
+<%! from django.utils.translation import ugettext as _ %>
+<%! import ast %>
+<%inherit file="../main.html" />
+<%namespace name='static' file='/static_content.html'/>
+<%block name="bodyclass">view-learning_analytics is-in-course course</%block>
+<%block name="pagetitle">${_("Learning analytics")}</%block>
+<%block name="headextra">
+<%static:css group='style-course-vendor'/>
+<%static:css group='style-course'/>
+ <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+ <!-- Load the Visualization API and the charts packages. -->
+ <script>
+   google.load('visualization', '1.0', {'packages':['corechart', 'timeline']});
+ </script>
+
+<script type="text/javascript"> 
+
+var COURSE_ID='${course_id}';
+var USER_ID='${user.id}';
+function change_section(clicked_id) {
+	
+	reset_elements();
+	
+	if(clicked_id == "a_exercise_visualizations")
+		{
+		document.getElementById("a_exercise_visualizations").className = "active-section";
+		document.getElementById("div_exercise_visualizations").style.display = "";
+		// Reload of visualizations for correct resizing
+		LA_student_grades.drawChart();
+		
+		// Mirar como poner el condicional para que entre aqui 
+		
+		if ('${instructor_access}' == 'True' || '${staff_access}' == 'True')
+		{
+			LA_course_sort_students.drawChart();
+		}
+		
+		drawChart3(${problem_distrib_json});
+		}
+	else if(clicked_id == "a_video_visualizations")
+		{
+		document.getElementById("a_video_visualizations").className = "active-section";
+		document.getElementById("div_video_visualizations").style.display = "";
+		// Reload of visualizations for correct resizing
+		drawChart1(${video_prog_json});
+		drawChart2(${video_distrib_json});
+		drawChart4(${video_intervals_array});
+		var userselect = document.getElementById('user').value;
+		if(userselect == '#average'){
+			drawChart6_2(${scatter_array});
+			document.getElementById('user').value='student';
+		}else{
+			var selectUser = JSON.parse(localStorage['selectuser']);
+			console.log('ENTRA_LA');
+			console.log(selectUser);
+			if(selectUser=='#average'){
+				drawChart6_2(${scatter_array});
+			}else{
+				drawChart6(${scatter_array});
+			}
+		}
+		}
+	else if(clicked_id == "a_course_activity_visualizations")
+       {
+       document.getElementById("a_course_activity_visualizations").className = "active-section";
+       document.getElementById("div_course_activity_visualizations").style.display = "";
+       // Reload of visualizations for correct resizing
+       drawChart5(${vid_and_prob_daily_time});
+       LA_course_accesses.drawChart();
+       LA_chapter_time.drawChart();
+       //LA_vid_prob_prog.drawChart();
+       LA_student_time_schedule.drawChart();
+       }
+}
+
+function reset_elements()
+{	
+	   document.getElementById("a_exercise_visualizations").className = "";
+	   document.getElementById("a_video_visualizations").className = "";
+	   document.getElementById("a_course_activity_visualizations").className = "";
+	    
+	   document.getElementById("div_exercise_visualizations").style.display = "none";
+	   document.getElementById("div_video_visualizations").style.display = "none";
+	   document.getElementById("div_course_activity_visualizations").style.display = "none";	   
+	}
+
+</script>
+
+<%include file="/learning_analytics/update_chart.html" />
+</%block>
+<%include file="/courseware/course_navigation.html" args="active_page='learning_analytics'" />
+
+<!-- Define hide tags to pass colors-->
+<input type="hidden" id="colorNOT" value="${color_not}" ></input>
+<input type="hidden" id="colorOK" value="${color_ok}" ></input>
+<input type="hidden" id="colorPROF" value="${color_prof}" ></input>
+<input type="hidden" id="colorFAIL" value="${color_fail}" ></input>
+<input type="hidden" id="probActivity" value="${problem_activity}" ></input>
+<input type="hidden" id="vidActivity" value="${video_activity}" ></input>
+<input type="hidden" id="courActivity" value="${course_activity}" ></input>
+<input type="hidden" id="vidRepetition" value="${video_repetition}" ></input>
+<input type="hidden" id="gradedTime" value="${graded_time}" ></input>
+<input type="hidden" id="ungradedTime" value="${ungraded_time}" ></input>
+<input type="hidden" id="chapterTime" value="${chapter_time}" ></input>
+<input type="hidden" id="playevent" value="${play_event}" ></input>
+<input type="hidden" id="pauseevent" value="${pause_event}" ></input>
+<input type="hidden" id="seekfromevent" value="${seek_from_event}" ></input>
+<input type="hidden" id="seektoevent" value="${seek_to_event}" ></input>
+<input type="hidden" id="changespeedevent" value="${change_speed_event}" ></input>
+
+<input type="hidden" id="morningtime" value="${morning_time}" ></input>
+<input type="hidden" id="afternoontime" value="${afternoon_time}" ></input>
+<input type="hidden" id="nighttime" value="${night_time}" ></input>
+
+<input type="hidden" id="user" value="${user_for_charts}" ></input>
+
+<body>
+<div class="container">
+	<div class="profile-wrapper">
+		<div class="learning-analytics">
+			<header>
+				<h1>${_("Learning Analytics for course: {course}").format(course=course.display_name)}</h1>
+			</header>
+
+			% if instructor_access or staff_access:
+            <h2>Dashboard for Instructors</h2>
+            % else:
+            <h2>Dashboard for Students</h2>
+            % endif
+            
+			<div class="instructor-dashboard-wrapper-2">
+                <section class="instructor-dashboard-content-2" id="learning-analytics-dashboard-content">
+				    <ul class="instructor-nav">
+				        <li class="nav-item"><a href="#" id="a_exercise_visualizations" onclick="change_section(this.id);">Problem visualizations</a></li>
+				        <li class="nav-item"><a href="#" id="a_video_visualizations" onclick="change_section(this.id);">Video visualizations</a></li>
+				        <li class="nav-item"><a href="#" id="a_course_activity_visualizations" onclick="change_section(this.id);">Course activity visualizations</a></li>
+				    </ul>
+				</section>
+			</div>
+
+			<div class="visualizations">
+
+				<div id="div_exercise_visualizations"   style="display: none;">
+				    % if instructor_access or staff_access:             
+	                    <%include file="course_sort_students.html" />
+	                % endif                                
+	                <%include file="students_grades.html" />
+	                <%include file="problem_time_distribution.html" />
+				</div>
+				
+				<div id="div_video_visualizations"   style="display: none">				
+		            <%include file="video_progress.html" />
+		            <%include file="rep_video_intervals.html" /> 
+		            <%include file="video_time_distribution.html" />
+		            <%include file="video_event_distribution.html" />
+	            </div>
+	            
+	            <div id="div_course_activity_visualizations"   style="display: none;">	            	            
+	                <%include file="daily_time_ex_vid.html" />	                	                                
+	                <%include file="course_accesses.html" />	                
+	                <%include file="chapter_time.html" />	         
+	                <%include file="students_time_schedule.html" />						
+	            </div>
+			</div>
+		</div>
+		<%include file="/learning_analytics/select_adjustments.html" />
+	</div>
+</div>
+</body>

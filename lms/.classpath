@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="lib" path="static/xmodule_js/common_static/applets/capa/genex.jar"/>
+	<classpathentry kind="lib" path="static/xmodule_js/common_static/applets/capa/Protex.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

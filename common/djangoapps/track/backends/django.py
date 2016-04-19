@@ -14,7 +14,7 @@ import logging
 from django.db import models
 
 from track.backends import BaseBackend
-
+from django.utils import timezone
 
 log = logging.getLogger('track.backends.django')
 
@@ -77,6 +77,7 @@ class DjangoBackend(BaseBackend):
     def send(self, event):
         field_values = {x: event.get(x, '') for x in LOGFIELDS}
         tldat = TrackingLog(**field_values)
+	tldat.time = timezone.now()
         try:
             tldat.save(using=self.name)
         except Exception as e:  # pylint: disable=broad-except
