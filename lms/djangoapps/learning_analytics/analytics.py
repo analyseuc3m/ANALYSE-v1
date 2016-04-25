@@ -935,8 +935,8 @@ def add_time_chapter_time(original, new):
         #print 'CH_ID'
         #print ch_id
         original[ch_id]['time_spent'] = original[ch_id]['time_spent'] + new[ch_id]['time_spent']
-        #print 'ORIGINAL Y EL NEW'
-        #print original[ch_id]['time_spent'],new[ch_id]['time_spent']
+        print 'ORIGINAL Y EL NEW'
+        print original[ch_id]['time_spent'],new[ch_id]['time_spent']
         #print original[ch_id]['sequentials'].keys()
         #print new[ch_id]['sequentials'].keys()
         if original[ch_id]['sequentials'].keys() != new[ch_id]['sequentials'].keys():
@@ -1015,8 +1015,8 @@ def update_DB_course_spent_time(course_key):
                 #original_coursetime[67]['sequentials'][76]=original_coursetime[67]['sequentials'][77]
                 #original_coursetime[67]['sequentials'][76]=original_coursetime[67]['sequentials'].pop(77)
                 #print original_coursetime[67]['sequentials'][76]
-                #print 'OriginalTImes'
-                #print original_coursetime
+                print 'OriginalTImes'
+                print original_coursetime
                 #print d
                 #print 'CHapters time'
                 #time_chapters_student= str(time_chapters_student)
@@ -1166,14 +1166,13 @@ def get_DB_course_spent_time(course_key, student_id=None):
     course_struct = get_DB_course_struct(course_key, include_unreleased=False)
     
     # Students time
-    print 'Students id get_DB_course_spent_time'
-    print student_id
+
     students_time = {}
     if student_id is None:
         sql_time = CourseTime.objects.filter(course_id=course_key)
     else:
         sql_time = CourseTime.objects.filter(course_id=course_key, student_id=student_id)
-        
+
     for std_time in sql_time:
         students_time[std_time.student_id] = ast.literal_eval(std_time.time_spent)
         
@@ -1203,8 +1202,6 @@ def create_access_chapters(course_key):
                                                    'verticals': {},
                                                    'last_vert': 1}
             verticals = CourseStruct.objects.filter(course_id=course_key, section_type='vertical', father=seq)
-            #print 'VERTICALS'
-            #print verticals
             for vert in verticals:
                 chapter_elem['sequentials'][seq.id]['verticals'][vert.id] = {'accesses': 0}
         access_chapters[chapter.id] = chapter_elem
@@ -1219,8 +1216,6 @@ def get_student_section_accesses(course_key, student, access_chapters=None):
     """
     if access_chapters is None:
         access_chapters = create_access_chapters(course_key)
-    #print 'access_chapters'
-    #print  access_chapters   
     events = get_new_events_sql(course_key, student, 'courseAccesses') 
     
     if events != None:
@@ -1246,11 +1241,6 @@ def get_student_section_accesses(course_key, student, access_chapters=None):
                 if course is not None and cur_chapt is not None:
                     if cur_seq is not None:
                         cur_vert = access_chapters[cur_chapt]['sequentials'][cur_seq]['last_vert']
-                        #print 'VALORES IMPORTANTES'
-                        #print access_chapters[cur_chapt]['sequentials'][cur_seq]
-                        #print access_chapters[cur_chapt]['sequentials'][cur_seq]['last_vert']
-                        #print 'cur_vert',cur_vert
-                        #print 'cur_seq',cur_seq
                         # Add sequential access
                         access_chapters = add_course_access(access_chapters, cur_chapt, cur_seq, None)
                         # Add 1st vertical access
@@ -1267,10 +1257,7 @@ def get_student_section_accesses(course_key, student, access_chapters=None):
                      event.event_type == 'seq_goto') and
                     event_data['old'] != event_data['new']):
                         cur_vert = event_data['new']
-                        #print 'CURT VERT BROWSER'
-                        #print cur_vert
                         access_chapters[cur_chapt]['sequentials'][cur_seq]['last_vert'] = cur_vert
-                        #print access_chapters[cur_chapt]['sequentials'][cur_seq]['last_vert']
                         # Add vertical access
                         access_chapters = add_course_access(access_chapters, cur_chapt, cur_seq, cur_vert)
 
@@ -1316,11 +1303,6 @@ def add_course_access(access_chapters, chapt_id, seq_id=None, vert_pos=None):
     else:
         if vert_pos is None:
             # Sequential access
-            #print 'seqID'
-            #print seq_id
-            #print chapt_id
-            #print access_chapters[chapt_id]['sequentials'][seq_id]
-            #print access_chapters[chapt_id]['sequentials'][seq_id]['accesses']
             access_chapters[chapt_id]['sequentials'][seq_id]['accesses'] += 1
             # Chapter access
             access_chapters[chapt_id]['accesses'] += 1
@@ -1328,11 +1310,6 @@ def add_course_access(access_chapters, chapt_id, seq_id=None, vert_pos=None):
             # Vertical access
             if CourseStruct.objects.filter(father_id=seq_id, index=vert_pos).count() > 0:
                 vert_id = CourseStruct.objects.filter(father_id=seq_id, index=vert_pos)[0].id
-                #print 'VERTICAL ID'
-                #print seq_id
-                #print vert_pos
-                #print vert_id
-                #print access_chapters[chapt_id]['sequentials'][seq_id]['verticals'][vert_id]
                 access_chapters[chapt_id]['sequentials'][seq_id]['verticals'][vert_id]['accesses'] += 1
                         
     return access_chapters
@@ -1517,8 +1494,6 @@ def get_DB_course_section_accesses(course_key, student_id=None):
     
     # Course struct
     course_struct = get_DB_course_struct(course_key, include_verticals=True, include_unreleased=False)
-    print 'Student get_DB_course_section_accesses'
-    print student_id
     # Students time
     students_accesses = {}
     if student_id is None:
@@ -1590,28 +1565,16 @@ def perdelta(start, end, delta):
     else:
 
         while curr <= end_loop:
-            
-            #print 'COMPARACION'
-            #print curr
-            #print start
+
             if curr == start:
-                print 'ENTRA IF'
                 timeline.append(curr)
                 curr = curr+timedelta(1)
                 curr = curr.replace(hour=0, minute=0, second=0, microsecond=0)
-                #print curr
-            #print 'CURR' 
-            #print curr   
             timeline.append(curr)
 
             if curr == end_loop and end != end_loop:
                 timeline.append(end)
-            #print end_loop.day
-            #print curr.day
             curr += delta
-            #print'CURR FINAL'
-            #print curr
-            #print delta
     return timeline
 
 
@@ -1620,32 +1583,19 @@ def get_student_problem_progress(course_key, student, course_struct=None, timeli
     """
     Return problem progress for a given course and student
     """
-    #print 'TIMELINE'
-    #print timeline
     if course_struct is None or timeline is None:
         course_struct, timeline = create_course_progress(course_key)
     
     problem_progress = []
     
     events = get_new_events_sql(course_key, student, 'problemProgress')
-    #print 'events get_student_problem_progress'
-    #print events
     if events != None:
         count = 0
-        #print 'timeline'
-        #print timeline
         for act_time in timeline:
             # Last date of the course is the end of the loop
             if act_time != timeline[-1]:
-                #print 'distinto'
-                #print timeline[-1]
-                #print act_time
                 last_time = timeline[count+1]
-                count += 1 
-            #print 'act_time'
-            #print act_time
-            #print 'last_time'
-            #print last_time
+                count += 1
             filter_events = events.filter(dtcreated__gt = act_time,
                                       dtcreated__lte = last_time)
 
@@ -1653,8 +1603,6 @@ def get_student_problem_progress(course_key, student, course_struct=None, timeli
             for event in filter_events:
                 prob_data = ast.literal_eval(event.event)
                 prob_block = course_key.make_usage_key_from_deprecated_string(prob_data['problem_id'])
-                #print 'prob_block'
-                #print prob_block
                 for section in course_struct:
                     for prob in section['problems']:
                         
@@ -1678,17 +1626,11 @@ def get_student_problem_progress(course_key, student, course_struct=None, timeli
             total = int(round(total,0))
             if total > 100:
                 total = 100
-            #print 'total'
-            #print total
-            #print 'act_time'
-            #print act_time
             problem_progress.append({'score':total, 'time': act_time})
         
     else:
         print 'NO HAY PROGRESO DE PROBLEMAS'
         problem_progress = None
-    #print 'problem progres'
-    #print problem_progress
     return problem_progress
 
 
@@ -1824,8 +1766,6 @@ def update_DB_course_problem_progress(course_key, course_struct=None, timeline=N
     fail = 0
     
     for time in timeline:
-        #print 'time'
-        #print time
         all_problem_progress.append({'score':0, 'time':time})
         prof_problem_progress.append({'score':0, 'time':time})
         ok_problem_progress.append({'score':0, 'time':time})
@@ -2505,8 +2445,6 @@ def update_DB_course_video_progress(course_key, timeline=None):
         if ok == 1:
             # New PASS students progress to database
             ok_video_progress = mean_video_progress_sum(ok_video_progress, num_ok)
-            #print 'OK_VIDEO_PROGRESS'
-            #print ok_video_progress
             # Update entry
             try:
                 #Using get beceause there will only be one entry for each student and each course
@@ -2516,23 +2454,11 @@ def update_DB_course_video_progress(course_key, timeline=None):
                 sql_filtered = None
 
             progress, start_date, end_date, delta = optimize_video_progress(ok_video_progress)
-            print 'start_date ok'
-            print   start_date
-            print 'end_date ok'
-            print end_date
             # Create entry
-            print 'OPTIMIZE_VIDEO'
-            print progress
-            print 'sql_filtered1'
-            print sql_filtered
             if (sql_filtered == None and start_date != None and end_date != None):
-                print 'PROGRESS'
-                print progress
                 CourseProbVidProgress.objects.create(student_id=CourseProbVidProgress.PASS_GROUP,course_id=course_key, progress=progress,type='VID', start_time=start_date,end_time=end_date, delta=delta)
             elif (progress != [0]):
                 # Get stored progress
-                print 'SQL_FILTERED'
-                #print sql_filtered.progress
                 original_progress = ast.literal_eval(sql_filtered.progress)
                 start_date = sql_filtered.start_time
                 
@@ -2607,14 +2533,7 @@ def get_DB_course_video_problem_progress(course_key, student_id=None):
         sql_progress = CourseProbVidProgress.objects.filter(course_id=course_key)
     else:
         sql_progress = CourseProbVidProgress.objects.filter(course_id=course_key, student_id=student_id)
-    print 'sql_progress'
-    print sql_progress     
     for prob_progress in sql_progress.filter(type='PROB'):
-        print 'PROB_PROGRESS'
-        print sql_progress.filter(type='PROB')
-        print prob_progress
-        print prob_progress.student_id
-        print sql_progress.filter(type='VID', student_id=prob_progress.student_id)
         vid_progress = sql_progress.filter(type='VID', student_id=prob_progress.student_id)[0]# C. J. Gascon CODIGO REAL CON DATOS
         #vid_progress = sql_progress.filter(type='VID', student_id=prob_progress.student_id)
         # Start time

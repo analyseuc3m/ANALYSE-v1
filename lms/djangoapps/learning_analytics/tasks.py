@@ -15,8 +15,7 @@ def update_DB_analytics():
 	"""
 	logging.info("Starting update_DB_analytics()")
 	#course_id = get_course_key("CEPA_Sierra_Norte/C1/2015")
-	course_id = get_course_key("course-v1:edx+CS112+2015_T3")
-		
+	course_id = get_course_key("course-v1:edx+CS102+2016_T3")
 	update_DB_course_struct(course_id) #OK
 	update_DB_student_grades(course_id) # OK
 	update_DB_course_spent_time(course_id) #OK

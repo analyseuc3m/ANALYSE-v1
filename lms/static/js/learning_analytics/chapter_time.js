@@ -68,8 +68,11 @@ var LA_chapter_time = (function(){
 		var chart = new google.visualization.BarChart(document.getElementById('chart_chapter_time'));
 		
 	    var formatter = new google.visualization.NumberFormat(
-	    	      {suffix: ' min', pattern:'#,###', fractionDigits: '2'});
+	    	      {suffix: ' min', fractionDigits: '1'});
 	    formatter.format(data, 1);
+	    formatter.format(data, 2);
+        formatter.format(data, 3);
+	    google.visualization.events.addListener(chart, 'ready', allReady); // ADD LISTENER
 		chart.draw(data, options);
 
 	};
@@ -215,3 +218,9 @@ var LA_chapter_time = (function(){
 
 // Set a callback to run when the Google Visualization API is loaded.
 google.setOnLoadCallback(LA_chapter_time.drawChart);
+
+function allReady() {
+    var e = document.getElementById('per_problem_time');
+    // svg elements don't have inner/outerHTML properties, so use the parents
+    //console.log(e.getElementsByTagName('svg')[0].parentNode.innerHTML);
+}

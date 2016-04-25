@@ -25,11 +25,6 @@ function drawChart3(json_data) {
     var vectorNames =[];
     var sumvalues =0;
 
-    for (var i=1;i<json_data.length;i++){
-        vectorValues[i-1]=json_data[i][1];
-        vectorNames[i-1]=json_data[i][0];
-        sumvalues=sumvalues+json_data[i][1];
-    }
     json_data[0][2]={type: 'string', role: 'tooltip'};
     var problem_names_sorted=${problem_names_sorted};
     var json = [];
@@ -46,9 +41,16 @@ function drawChart3(json_data) {
 	    }
 	}
 
+	for (var i=1;i<json.length;i++){
+        vectorValues[i-1]=json[i][1];
+        vectorNames[i-1]=json[i][0];
+        sumvalues=sumvalues+json[i][1];
+    }
+
     for (var j=1;j<json.length;j++){
+        json[j][2]= vectorValues[j-1] + ' min' + '\n' + ((json[j][1]/sumvalues)*100).toFixed(2) +' %';
         json[j][1]=(json[j][1]/sumvalues)*100;
-        json[j][2]= vectorValues[j-1] + ' min' + '\n' + (json[j][1].toFixed(2)) +' %';
+
 
     }
     var json_limit= [];
@@ -65,7 +67,7 @@ function drawChart3(json_data) {
     // Create the data table.
     var data = new google.visualization.arrayToDataTable(json_limit);
     var formatter = new google.visualization.NumberFormat(
-    	      {suffix: ' min', pattern:'#,###%', fractionDigits: '1'});
+    	      {suffix: ' min', fractionDigits: '1'});
     formatter.format(data, 1);
     // Set chart options
     var COLOR = document.getElementById('probActivity').value;
@@ -74,7 +76,8 @@ function drawChart3(json_data) {
       tooltip: {isHtml: true},
       colors: [COLOR],
     };
-    
+    console.log('probActivity');
+    console.log(json_limit);
     chart.draw(data, options);
     
   } else {   
@@ -107,7 +110,8 @@ function drawChart3_2(json_data) {
       tooltip: {isHtml: true},
       colors: [COLOR],
     };
-
+    console.log('probActivity');
+    console.log(json_data);
     chart.draw(data, options);
 
   } else {

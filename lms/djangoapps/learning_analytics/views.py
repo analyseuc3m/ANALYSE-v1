@@ -195,7 +195,7 @@ def index(request, course_id):
         # Sort homework                    
         # Chapter time
         std_sort = None
-        cs, st = get_DB_course_spent_time(course_key, user.id) 
+        cs, st = get_DB_course_spent_time(course_key, user.id)
         students_spent_time = chapter_time_to_js(cs, st) 
         students_grades = get_DB_student_grades(course_key, user.id) 
         cs, sa = course_accesses = get_DB_course_section_accesses(course_key, user.id)

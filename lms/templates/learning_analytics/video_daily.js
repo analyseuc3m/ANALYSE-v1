@@ -39,7 +39,6 @@ function drawChart5(json_data) {
 		   height: 400,
 		   colors: COLORS,
 		   legend: {position: 'none'},};
-    
     chart.draw(data, options);
     
   } else {   
