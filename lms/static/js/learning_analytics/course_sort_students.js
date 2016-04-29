@@ -105,10 +105,10 @@ var LA_course_sort_students = (function(){
 			if (isTotal || gs[i]['category'] == category){
 				var total = gs[i]['NOT'] + gs[i]['FAIL'] + gs[i]['OK'] + gs[i]['PROFICIENCY'];
 				cat_array.push([gs[i]['label'],
-					gs[i]['NOT']/total,
-					gs[i]['FAIL']/total,
-					gs[i]['OK']/total,
-					gs[i]['PROFICIENCY']/total]
+					(gs[i]['NOT']/total)*100,
+					(gs[i]['FAIL']/total)*100,
+					(gs[i]['OK']/total)*100,
+					(gs[i]['PROFICIENCY']/total)*100]
 				);
 			}
 		}

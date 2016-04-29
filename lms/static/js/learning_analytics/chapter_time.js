@@ -57,8 +57,6 @@ var LA_chapter_time = (function(){
 					legend: {position: 'none'},
 					isStacked: true,
 				};
-				console.log('time_array');
-                console.log(time_array);
 				// Select callbacks
 				setSelectCallback();
 
@@ -220,7 +218,7 @@ var LA_chapter_time = (function(){
 google.setOnLoadCallback(LA_chapter_time.drawChart);
 
 function allReady() {
-    var e = document.getElementById('per_problem_time');
+    var e = document.getElementById('vid_prob_daily_chart');
     // svg elements don't have inner/outerHTML properties, so use the parents
     //console.log(e.getElementsByTagName('svg')[0].parentNode.innerHTML);
 }

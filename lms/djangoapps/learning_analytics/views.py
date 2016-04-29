@@ -6,7 +6,7 @@ from django.http import HttpResponse
 import logging
 import json
 from django.db.models import Q
-from learning_analytics.analytics import to_iterable_module_id, get_module_consumption, get_video_time_watched, get_video_events_info, get_user_video_intervals, get_daily_consumption
+from learning_analytics.analytics import to_iterable_module_id, get_module_consumption, get_video_time_watched, get_video_events_info, get_user_video_intervals, get_daily_consumption,get_DB_infovideos
 from track.backends.django import TrackingLog
 #Codigo J. Antonio Gascon
 from courseware.courses import get_course_by_id
@@ -62,7 +62,7 @@ def index(request, course_id):
     # Palette
     color_not = '#CCCCCC'
     color_fail = '#e41a1c'
-    color_ok = '#ffff33'
+    color_ok = '#F2F20D'
     color_prof = '#4daf4a'
     problem_activity='#377eb8'
     video_activity='#ff7f00'
@@ -76,10 +76,9 @@ def index(request, course_id):
     seek_from_event='#7570b3'
     seek_to_event='#e7298a'
     change_speed_event='#66a61e'
-    morning_time='#9ebcda'
-    afternoon_time ='#88419d'
-    night_time ='#4d004b'
-
+    morning_time='#C9C96C'
+    afternoon_time ='#7F7160'
+    night_time ='#50587C'
     # Request data
     course_key = get_course_key(course_id)
     course = get_course_module(course_key)
@@ -112,8 +111,12 @@ def index(request, course_id):
     # This returns video descriptors in the order they appear on the course
     video_descriptors = videos_problems_in(course)[0]
     #WARNINIG 
-    video_durations = get_info_videos_descriptors(video_descriptors)[2]
-    video_names, video_module_keys, video_durations = get_info_videos_descriptors(video_descriptors) # NO SE USAN LAS OTRAS VARIABLES
+    #video_durations = get_info_videos_descriptors(video_descriptors)[2]
+    #video_names, video_module_keys, video_durations = get_info_videos_descriptors(video_descriptors) # NO SE USAN LAS OTRAS VARIABLES
+    video_names, video_module_keys, video_durations =get_DB_infovideos()
+    video_names_sorted = video_names
+    video_ids_sort = video_names_sorted
+
     video_ids_str = []
     course_video_names = []
     problem_ids_str=[]
@@ -145,17 +148,7 @@ def index(request, course_id):
         # Repetitions per video intervals
         user_for_vid_intervals = '#class_total_times' if user_for_charts == '#average' else user_for_charts
         video_intervals_array = get_user_video_intervals(user_for_vid_intervals, first_video_id)        
-        video_names_sort = video_names
-        for i in range(1, len(all_video_time)):
-            for j in range(0, len(all_video_time) - i):
-                if (all_video_time[j] < all_video_time[j + 1]):
-                    k = all_video_time[j + 1]
-                    k2 = video_names[j + 1]
-                    all_video_time[j + 1] = all_video_time[j]
-                    video_names_sort[j + 1] = video_names[j]
-                    all_video_time[j] = k
-                    video_names_sort[j] = k2
-        video_ids_sort = video_names_sort
+
     # Case no videos in course
     else:
         video_names = None
@@ -175,6 +168,7 @@ def index(request, course_id):
     orden=[]
     orden.append(i for i, x in enumerate(problem_names_sorted))
     problem_ids_str=problem_names_sorted
+
     # Daily time spent on video and/or problem resources
     video_days, video_daily_time = get_daily_consumption(user_for_charts, course_key, 'video')
     problem_days, problem_daily_time = get_daily_consumption(user_for_charts, course_key, 'problem')    
@@ -246,7 +240,7 @@ def index(request, course_id):
                'chapter_time' : chapter_time,
                'user_for_charts' : user_for_charts,
                'video_ids_sort' : video_ids_sort,
-               'video_names_sort' : video_names_sort,
+               'video_names_sorted' : video_names_sorted,
                'problem_names_sorted' : problem_names_sorted,
                'play_event' : play_event,
                'pause_event' : pause_event,
@@ -293,8 +287,9 @@ def chart_update(request):
         elif chart == VISUALIZATIONS_ID['LA_video_progress']:
             # Video progress visualization. Video percentage seen total and non-overlapped.
             course = get_course_with_access(user_id, action='load', course_key=course_key, depth=None, check_if_enrolled=False)         
-            video_descriptors = videos_problems_in(course)[0]
-            video_durations = get_info_videos_descriptors(video_descriptors)[2] 
+            #video_descriptors = videos_problems_in(course)[0]
+            #video_durations = get_info_videos_descriptors(video_descriptors)[2]
+            video_durations = get_DB_infovideos()[2]
             # Codigo Javier Orcoyen
             video_names, avg_video_time, video_percentages = get_video_time_watched(user_id, course_key)
             if avg_video_time != []:

@@ -526,9 +526,9 @@ def update_DB_student_grades(course_key):
         std_grades = get_student_grades(course_key, student, full_gc,
                                         copy.deepcopy(sort_homework_std),
                                         copy.deepcopy(weight_data_std))
-        
+
         total_aux = std_grades['weight_subsections'][-1]['total']
-        
+
         # get grade group
         total_grade = std_grades['weight_subsections'][-1]['score']/std_grades['weight_subsections'][-1]['total']
         if total_grade >= proficiency_limit:
@@ -537,7 +537,7 @@ def update_DB_student_grades(course_key):
             grade_type = 'OK'
         else:
             grade_type = 'FAIL'
-            
+
         exists = StudentGrades.objects.filter(course_id=course_key, student_id=student.id)
         if exists.count() > 0:
             exists.update(grades=std_grades, grade_group=grade_type, last_calc=timezone.now())
@@ -546,7 +546,7 @@ def update_DB_student_grades(course_key):
                                          student_id=student.id,
                                          grades=std_grades,
                                          grade_group=grade_type)
-        
+
         # Add grade to groups
         # All
         all_std_grades = add_students_grades(all_std_grades, std_grades)
@@ -4243,15 +4243,8 @@ def time_on_problem(course_key, student, problem_module_id, indicator):
         'seq_next',
         'page_close'
     ]
-    #print course_key
-    #print student
-    #print problem_module_id
-    #print indicator
     events = get_new_module_events_sql(course_key, student, problem_module_id, indicator, None)
-    #print 'events'
-    #print events
     if events is None:
-        #print 'EXCEPTION'
         return None, None, None
     #Codigo J Antonio Gascon
     if len(events) <= 0:
@@ -4264,29 +4257,15 @@ def time_on_problem(course_key, student, problem_module_id, indicator):
     # Flag to control the pairs. get_problem = True means get_problem event expected
     get_problem = True
     for event in events:
-        #print 'event_type'
-        #print event.event_type
         if get_problem: # looking for a get_problem event
-            #print re.search('problem_get$',event.event_type)
             if re.search('problem_get$',event.event_type) is not None:
-
                 event_pairs.append(event.time)
-                #print 'Consigue problem_get'
-                #print event_pairs
-                #print event.time
                 get_problem = False
         else:# looking for an event in INVOLVED_EVENTS
-            if event.event_type in INVOLVED_EVENTS: 
-                #print 'Consigue otros seq_goto,seq_prev, seq_next o page_close'
+            if event.event_type in INVOLVED_EVENTS:
                 event_pairs.append(event.time)
-                #print event_pairs
-                #print event.time 
                 get_problem = True
-        #print 'EVENTOS DE TIEMPO'
-        #print 'event_type'
-        #print event.event_type
-        #print event_pairs
-        #print event.time
+
         
     problem_time = 0
     """
@@ -4359,6 +4338,17 @@ def get_module_consumption(username, course_id, module_type):
 
     return module_names, total_times
 
+def get_DB_infovideos():
+    videosinfo=CourseVideos.objects.all()
+    video_names=[]
+    video_module_ids=[]
+    video_durations=[]
+    for videoinfo in videosinfo:
+        video_names.append(str(videoinfo.video_name))
+        video_module_ids.append(videoinfo.video_module_ids)
+        video_durations.append(float(videoinfo.video_duration))
+
+    return video_names,video_module_ids,video_durations
 
 # Codigo Javier Orcoyen
 # Get info for Video time watched chart
@@ -4366,8 +4356,8 @@ def get_video_time_watched(username, course_id):
   
     course = get_course_by_id(course_id, depth=None)
     videos_in = videos_problems_in(course)[0]
-    video_names = get_info_videos_descriptors(videos_in)[0]
-
+    #video_names = get_info_videos_descriptors(videos_in)[0]
+    video_names= get_DB_infovideos()[0]
     #shortlist criteria
     shortlist = Q(student=username, course_key=course_id)
     consumption_modules = VideoTimeWatched.objects.filter(shortlist)

@@ -27,8 +27,10 @@
 <input type="text" id="from" name="from">
 <label for="to">to</label>
 <input type="text" id="to" name="to">
-<button onclick="rangedate()">Draw dates</button>
-
+<div>
+   <button onclick="rangedate()">Draw dates</button>
+   <button onclick="reset()">Reset</button>
+</div>
 <script>
 
 function rangedate(){
@@ -43,6 +45,7 @@ function rangedate(){
 	var endloop=selecto.getTime();
 	var limitdate=11;// Limit of dates to show in the graphic
 	var chart_number=5;// Number of the graphic
+	localStorage.setItem('chart_number',JSON.stringify(chart_number));
 	//New json that the user want to see
 	var jsonN = new Array ();
 	var cont=1;// Number of content

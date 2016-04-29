@@ -9,7 +9,10 @@
     % endfor
   </select>
 </form>
-<button onclick="rangevideos()">Draw again</button>
+<div>
+    <button onclick="rangevideos()">Draw again</button>
+    <button onclick="reset()">Reset</button>
+</div>
 % else:
 <p> This course contains no videos. </p>
 % endif
@@ -42,6 +45,7 @@ function rangevideos(){
 	//read of the localStorage
 	var json = JSON.parse(localStorage['foo']);
     var chart_number = 1;
+    localStorage.setItem('chart_number',JSON.stringify(chart_number));
 	var limitvideos=8; // limit of videos to select
 	// if you select a range of videos valid
 	if (opts.length<=limitvideos){

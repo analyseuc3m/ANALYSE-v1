@@ -29,14 +29,12 @@ function drawChart5(json_data) {
     var data = new google.visualization.arrayToDataTable(json_data);
     
     var formatter = new google.visualization.NumberFormat(
-  	      {suffix: ' min', pattern:'#,#', fractionDigits: '1'});
+  	      {suffix: ' min', fractionDigits: '1'});
     formatter.format(data, 1);
     formatter.format(data, 2);
     // Set chart options
     var options = {vAxis: {title: 'Time'},
 		   hAxis: {title: 'Date'},
-		   width: 500,
-		   height: 400,
 		   colors: COLORS,
 		   legend: {position: 'none'},};
     chart.draw(data, options);

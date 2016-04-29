@@ -13,6 +13,7 @@ from student.models import CourseEnrollment, CourseAccessRole
 from track.models import TrackingLog
 #Codigo JaviOrcoyen
 from models import LastKnownTrackingLog
+from models import CourseVideos
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User
 
@@ -822,6 +823,12 @@ def get_info_videos(course):
     
     for youtube_id in youtube_ids:
         video_durations.append(float(id_to_length(youtube_id))) #float useful for video_percentages to avoid precision loss
+    for k in range(len(video_names)):
+        try:
+            # Using get beceause there will only be one entry for each student and each course
+            CourseVideos.objects.get(video_name=video_names[k], video_module_ids=video_module_ids[k],video_duration=video_durations[k])
+        except ObjectDoesNotExist:
+            CourseVideos.objects.create(video_name=video_names[k], video_module_ids=video_module_ids[k],  video_duration=video_durations[k])
 
     return (video_names, video_module_ids, video_durations)
 
@@ -877,7 +884,12 @@ def get_info_videos_descriptors(video_descriptors):
     for youtube_id in youtube_ids:
         #print youtube_id
         video_durations.append(float(id_to_length(youtube_id))) #float useful for video_percentages to avoid precision loss
-        
+    for k in range(len(video_names)):
+        try:
+            # Using get beceause there will only be one entry for each student and each course
+            CourseVideos.objects.get(video_name=video_names[k], video_module_ids=video_module_ids[k],video_duration=video_durations[k])
+        except ObjectDoesNotExist:
+            CourseVideos.objects.create(video_name=video_names[k], video_module_ids=video_module_ids[k],  video_duration=video_durations[k])
     return video_names, video_module_ids, video_durations
 
 # Given a course_descriptor returns a list of the videos in the course
@@ -1267,7 +1279,6 @@ def get_new_events_sql(course_key, student, indicator):
     #Get new events for course video progress the first time it needs to calculate new events
     elif indicator == 'videoProgress1':
         events = get_video_events_interval(student, course_key, limitId)
-    # MOdificacion COdigo Gascon CAMBIAR DESPUES DE PRUEBAS
     
     #If there are new events, modify the lastKnownTracklog table to update/add the last known processed event
     if events:

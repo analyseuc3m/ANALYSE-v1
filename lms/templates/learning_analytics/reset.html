@@ -1,0 +1,23 @@
+<%! from django.utils.translation import ugettext as _ %>
+<button onclick="reset()">Reset</button>
+
+<script type="text/javascript">
+
+    function reset(){
+
+        chart_number=JSON.parse(localStorage['chart_number']);
+        if (chart_number==7){
+            drawChart3(${problem_distrib_json});
+        }else if(chart_number==1){
+            drawChart1(${video_prog_json});
+        }else if(chart_number==8){
+            drawChart2(${video_distrib_json});
+        }else if(chart_number==5){
+            drawChart5(${vid_and_prob_daily_time});
+        }
+        sessionStorage.removeItem('chart_number');
+        localStorage.removeItem('chart_number');
+    }
+
+
+</script>

@@ -381,3 +381,13 @@ class LastKnownTrackingLog(models.Model):
         app_label = 'learning_analytics'
         db_table = 'learning_analytics_lastknowntrackinglog'
 
+#Codigo J.A.Gascon
+#Related to the information of the videos in the courses
+class CourseVideos(models.Model):
+    video_name = models.CharField(max_length=255)
+    video_module_ids=models.CharField(max_length=255)
+    video_duration=models.TextField(db_index=False)
+
+    class Meta:
+        app_label = 'learning_analytics'
+        db_table = 'learning_analytics_coursevideos'

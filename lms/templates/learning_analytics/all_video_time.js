@@ -25,55 +25,43 @@ function drawChart2(json_data) {
     var vectorNames =[];
     var sumvalues =0;
 
-    for (var i=1;i<json_data.length;i++){
-        vectorValues[i-1]=json_data[i][1];
-        vectorNames[i-1]=json_data[i][0];
-        sumvalues=sumvalues+json_data[i][1];
-    }
-    /*
-    //Bubble sort
-    for(var i=1;i<vectorValues.length;i++){
-		for(var j=0;j<(vectorValues.length-i);j++){
-			if(vectorValues[j]<vectorValues[j+1]){
-				k=vectorValues[j+1];
-				k2=vectorNames[j+1];
-				vectorValues[j+1]=vectorValues[j];
-				vectorNames[j+1]=vectorNames[j];
-				vectorValues[j]=k;
-				vectorNames[j]=k2;
-			}
-		}
+    json_data[0][2]={type: 'string', role: 'tooltip'};
+    var video_names_sorted=${video_names_sorted};
+
+    var json = [];
+    var cont=1;
+    json [0] = json_data[0];
+    for (var j=0; j<video_names_sorted.length; j++) {
+	    for (var i=1;i<json_data.length; i++) {
+	        var n = (json_data[i][0]).localeCompare(video_names_sorted[j]);
+            if (n==0){
+                //Assign the value of the video selected
+                json [cont] = json_data[i];
+                cont= 1 + cont;
+            }
+	    }
 	}
 
-    json_data1= [];
-    values_min=[];
-    json_data1[0]=json_data[0];
-    for (var n=0;n<vectorValues.length;n++){
-        for (var j=1;j<json_data.length;j++){
-            var comp = (vectorNames[n]).localeCompare(json_data[j][0]);// Compare the name of problems to sort
-            if ((vectorValues[n])==(json_data[j][1])){// Compare the value of problems to sort
-                if (comp==0){
-                    json_data1[n+1]=json_data[j];
-                    values_min[n]=json_data[j][1];
-                }
-            }
-        }
+
+    for (var i=1;i<json.length;i++){
+        vectorValues[i-1]=json[i][1];
+        vectorNames[i-1]=json[i][0];
+        sumvalues=sumvalues+json[i][1];
     }
-    */
-    json_data[0][2]={type: 'string', role: 'tooltip'};
-    for (var j=1;j<json_data.length;j++){
-        json_data[j][1]=(json_data[j][1]/sumvalues)*100;
-        json_data[j][2]= vectorValues[j-1] + ' min' + '\n' + (json_data[j][1].toFixed(2)) +' %';
+
+    for (var j=1;j<json.length;j++){
+        json[j][1]=(json[j][1]/sumvalues)*100;
+        json[j][2]= vectorValues[j-1] + ' min' + '\n' + (json[j][1].toFixed(2)) +' %';
 
     }
 
     var json_limit= [];
     var cont=1;
-    json_limit [0] = json_data[0];
+    json_limit [0] = json[0];
     var cent=1;
-    for (var i=1;i<json_data.length; i++) {
+    for (var i=1;i<json.length; i++) {
         if(cent<9){
-            json_limit [cent] = json_data[i];
+            json_limit [cent] = json[i];
             cent=1+cent;
         }
     }

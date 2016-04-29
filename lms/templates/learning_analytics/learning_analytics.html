@@ -52,13 +52,14 @@ function change_section(clicked_id) {
 			document.getElementById('user').value='student';
 		}else{
 			var selectUser = JSON.parse(localStorage['selectuser']);
-			console.log('ENTRA_LA');
-			console.log(selectUser);
 			if(selectUser=='#average'){
 				drawChart6_2(${scatter_array});
 			}else{
-				drawChart6(${scatter_array});
+				var json_events=JSON.parse(localStorage['dateJSONevents']);
+				drawChart6(json_events);
 			}
+			sessionStorage.removeItem('selectuser');
+        	localStorage.removeItem('selectuser');
 		}
 		}
 	else if(clicked_id == "a_course_activity_visualizations")

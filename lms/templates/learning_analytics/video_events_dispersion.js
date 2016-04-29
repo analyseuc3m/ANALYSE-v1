@@ -114,7 +114,7 @@ function drawChart6_2(json_data) {
             if(json_data[j][0]<vector_rango[i] && json_data[j][0]>vector_rango[i-1]){
                 for(var n=1;n<json_eventos[0].length;n++){
                     if(json_data[j][n]!= null){
-                        json_eventos[i][n]=json_eventos[i][n]+1;// QUE VALE LA i ?
+                        json_eventos[i][n]=json_eventos[i][n]+1;
                         vectorValues[n-1]=vectorValues[n-1]+1;
                     }
                 }
