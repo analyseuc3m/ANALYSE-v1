@@ -101,7 +101,7 @@ def index(request, course_id):
     usernames_in = []
     for student in CourseEnrollment.objects.users_enrolled_in(course_key):#Codigo Jose A. Gascon, se cambia la forma de llamar al metode users_enrolled_in
         usernames_in.append(student.username.encode('utf-8'))
-              
+
 
     # Data for visualization in JSON
     user_for_charts = '#average' if (staff_access or instructor_access) else user
@@ -116,6 +116,18 @@ def index(request, course_id):
     video_names, video_module_keys, video_durations =get_DB_infovideos()
     video_names_sorted = video_names
     video_ids_sort = video_names_sorted
+
+    #course_name = get_course_by_id(course_key, depth=None)
+    names_students=[]
+    only_students = []
+    students_names = get_course_students(course_key)
+    print students_names
+    for student in students_names:
+        staff_access_user = has_access(student, 'staff', course).has_access
+        instructor_access_user = has_access(student, 'instructor', course).has_access
+        if not (staff_access_user or instructor_access_user):
+            names_students.append(student.username.encode('utf-8'))
+            only_students.append(student)
 
     video_ids_str = []
     course_video_names = []
@@ -162,13 +174,13 @@ def index(request, course_id):
     problem_names, time_x_problem = get_module_consumption(user_for_charts, course_key, 'problem')
     column_headers = ['Problem', 'Time on problem']
     problem_distrib_json = ready_for_arraytodatatable(column_headers, problem_names, time_x_problem)
-
+    print 'USER'
+    print user
     problems_in = videos_problems_in(course)[1]
     problem_names_sorted = [x.display_name_with_default.encode('utf-8') for x in problems_in]
     orden=[]
     orden.append(i for i, x in enumerate(problem_names_sorted))
     problem_ids_str=problem_names_sorted
-
     # Daily time spent on video and/or problem resources
     video_days, video_daily_time = get_daily_consumption(user_for_charts, course_key, 'video')
     problem_days, problem_daily_time = get_daily_consumption(user_for_charts, course_key, 'problem')    
@@ -196,6 +208,7 @@ def index(request, course_id):
         students_course_accesses = course_accesses_to_js(cs, sa) 
         students_time_schedule = get_DB_time_schedule(course_key, user.id)  
         #students_prob_vid_progress = get_DB_course_video_problem_progress(course_key, user.id)  #C. J. A. Gascon ERROR
+
     context = {'course': course,
                'request': request,
                'user': user,
@@ -206,7 +219,7 @@ def index(request, course_id):
                'studio_url': studio_url,
                #'reverifications': reverifications,
                'course_id': course_id,
-               'students': students_to_js(get_course_students(course_key)),
+               'students': students_to_js(only_students),
                'visualizations_id': VISUALIZATIONS_ID,
                'std_grades_dump': dumps(students_grades),
                'sort_std_dump': dumps(std_sort),
@@ -249,7 +262,8 @@ def index(request, course_id):
                'change_speed_event' : change_speed_event,
                'morning_time' : morning_time,
                'afternoon_time' : afternoon_time,
-               'night_time' : night_time,}
+               'night_time' : night_time,
+               'names_students' : names_students,}
         
     return render_to_response('learning_analytics/learning_analytics.html', context)    
 

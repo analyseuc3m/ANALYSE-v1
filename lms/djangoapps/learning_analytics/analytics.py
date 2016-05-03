@@ -486,6 +486,7 @@ def update_DB_student_grades(course_key):
     course = get_course_module(course_key)
     #print course
     students = get_course_students(course_key)
+    print students
     full_gc = dump_full_grading_context(course)
     sort_homework_std, weight_data_std = get_student_grades_course_struct(full_gc)
     all_std_grades = copy.deepcopy(sort_homework_std)
@@ -523,44 +524,47 @@ def update_DB_student_grades(course_key):
     total_aux = 0.0
     
     for student in students:
-        std_grades = get_student_grades(course_key, student, full_gc,
-                                        copy.deepcopy(sort_homework_std),
-                                        copy.deepcopy(weight_data_std))
+        staff_access = has_access(student, 'staff', course).has_access
+        instructor_access = has_access(student, 'instructor', course).has_access
+        if not (staff_access or instructor_access):
+            std_grades = get_student_grades(course_key, student, full_gc,
+                                            copy.deepcopy(sort_homework_std),
+                                            copy.deepcopy(weight_data_std))
 
-        total_aux = std_grades['weight_subsections'][-1]['total']
+            total_aux = std_grades['weight_subsections'][-1]['total']
 
-        # get grade group
-        total_grade = std_grades['weight_subsections'][-1]['score']/std_grades['weight_subsections'][-1]['total']
-        if total_grade >= proficiency_limit:
-            grade_type = 'PROF'
-        elif total_grade >= pass_limit:
-            grade_type = 'OK'
-        else:
-            grade_type = 'FAIL'
+            # get grade group
+            total_grade = std_grades['weight_subsections'][-1]['score']/std_grades['weight_subsections'][-1]['total']
+            if total_grade >= proficiency_limit:
+                grade_type = 'PROF'
+            elif total_grade >= pass_limit:
+                grade_type = 'OK'
+            else:
+                grade_type = 'FAIL'
 
-        exists = StudentGrades.objects.filter(course_id=course_key, student_id=student.id)
-        if exists.count() > 0:
-            exists.update(grades=std_grades, grade_group=grade_type, last_calc=timezone.now())
-        else:
-            StudentGrades.objects.create(course_id=course_key,
-                                         student_id=student.id,
-                                         grades=std_grades,
-                                         grade_group=grade_type)
+            exists = StudentGrades.objects.filter(course_id=course_key, student_id=student.id)
+            if exists.count() > 0:
+                exists.update(grades=std_grades, grade_group=grade_type, last_calc=timezone.now())
+            else:
+                StudentGrades.objects.create(course_id=course_key,
+                                             student_id=student.id,
+                                             grades=std_grades,
+                                             grade_group=grade_type)
 
-        # Add grade to groups
-        # All
-        all_std_grades = add_students_grades(all_std_grades, std_grades)
-        all_count += 1
-        # Group
-        if grade_type == 'PROF':
-            prof_std_grades = add_students_grades(prof_std_grades, std_grades)
-            prof_count += 1
-        elif grade_type == 'OK':
-            pass_std_grades = add_students_grades(pass_std_grades, std_grades)
-            pass_count += 1
-        else:
-            fail_std_grades = add_students_grades(fail_std_grades, std_grades)
-            fail_count += 1
+            # Add grade to groups
+            # All
+            all_std_grades = add_students_grades(all_std_grades, std_grades)
+            all_count += 1
+            # Group
+            if grade_type == 'PROF':
+                prof_std_grades = add_students_grades(prof_std_grades, std_grades)
+                prof_count += 1
+            elif grade_type == 'OK':
+                pass_std_grades = add_students_grades(pass_std_grades, std_grades)
+                pass_count += 1
+            else:
+                fail_std_grades = add_students_grades(fail_std_grades, std_grades)
+                fail_count += 1
     
     all_std_grades['weight_subsections'][-1]['total'] = total_aux
     prof_std_grades['weight_subsections'][-1]['total'] = total_aux
@@ -732,10 +736,6 @@ def get_student_spent_time(course_key, student, time_chapters=None, course_block
     events = get_new_events_sql(course_key, student, 'courseTime')
     #print 'EVENTS'
     #print events
-    """for event in events:        
-        print ("Event: " + str(i))
-        print event
-        i += 1 """
     if events != None:
         #print 'HAY EVENTOS'
         for event in events:
@@ -758,8 +758,6 @@ def get_student_spent_time(course_key, student, time_chapters=None, course_block
 
 def manage_browser_event(time_data, time_chapters, event):
     # Get event location
-    #print 'BROWSER'
-    #print event.page
     course_key, chapt_key, seq_key = get_locations_from_url(event.page)
     if event.event_type == 'page_close':
         if (time_data['current_chapter'] != None and 
@@ -793,20 +791,13 @@ def manage_browser_event(time_data, time_chapters, event):
 
 def manage_server_event(time_data, time_chapters, event, course_blocks=None):
     # Get event location
-    #print 'eventType'
-    #print event.event_type
     course_key, chapt_key, seq_key = get_locations_from_url(event.event_type, course_blocks)
-    #print '2) CLAVES(manage_server_event)'
-    #print course_key, chapt_key, seq_key
     if ((course_key == None) or
         (chapt_key == None and 
         seq_key == None)):
         # logout / dashboard / load courseware,info, xblock etc -> Close activity
         if time_data['current_chapter'] != None:
             # Close activity
-            #print '3) Close Activity'
-            #print time_data['current_chapter']
-            #print event.dtcreated
             time_data, time_chapters = activity_close(time_chapters, time_data, event.dtcreated)
     else:
         if time_data['current_chapter'] == None:
@@ -835,10 +826,6 @@ def manage_server_event(time_data, time_chapters, event, course_blocks=None):
 
 def activity_close(time_chapters, time_data, current_time, new_chapter=None, new_seq=None):
     # If activity already closed
-    #print 'time data'
-    #print time_data['last_time']
-    #print time_data['initial_time']
-    #print time_data['current_chapter']
     if (time_data['last_time'] is None or
         time_data['initial_time'] is None or
         time_data['current_chapter'] is None):
@@ -848,12 +835,6 @@ def activity_close(time_chapters, time_data, current_time, new_chapter=None, new
     # Add activity time
     time = time_data['last_time'] - time_data['initial_time']
     elapsed_time = current_time - time_data['last_time']
-    #print '4) Times'
-    #print time
-    #print time_data['last_time']
-    #print '5) Elapsed_time'
-    #print current_time
-    #print elapsed_time
     if (elapsed_time.days != 0 or 
         elapsed_time.seconds > INACTIVITY_TIME):
         elapsed_time = timedelta(seconds=INACTIVITY_TIME)
@@ -963,7 +944,7 @@ def update_DB_course_spent_time(course_key):
     prof = 0
     ok = 0
     fail = 0
-
+    course = get_course_module(course_key)
     time_chapters = create_time_chapters(course_key)
     # Student groups time chapters
     time_chapters_all = copy.deepcopy(time_chapters)
@@ -977,83 +958,60 @@ def update_DB_course_spent_time(course_key):
     
     # Add students time chapters to database
     for student in students:
-        time_chapters_student = copy.deepcopy(time_chapters)
-        #Dictionary with the new times
-        #print 'GET_student'
-        time_chapters_student = get_student_spent_time(course_key,
-                                                       student,
-                                                       time_chapters_student,
-                                                       course_blocks)
-        #If there are new times 
-        print 'Student'
-        print student
-        #print 'time_chapters_student tiene algo'
-        #print time_chapters_student
-        if time_chapters_student != None:
-            newEvents = 1
+        staff_access = has_access(student, 'staff', course).has_access
+        instructor_access = has_access(student, 'instructor', course).has_access
+        if not (staff_access or instructor_access):
+            time_chapters_student = copy.deepcopy(time_chapters)
+            #Dictionary with the new times
+            #print 'GET_student'
+            time_chapters_student = get_student_spent_time(course_key,
+                                                           student,
+                                                           time_chapters_student,
+                                                           course_blocks)
+            #If there are new times
+            print 'Student'
+            print student
+            #print 'time_chapters_student tiene algo'
+            #print time_chapters_student
+            if time_chapters_student != None:
+                newEvents = 1
 
-            # Update database
-            try:
-                #Using get beceause there will only be one entry for each student and each course
-                filtered_coursetime = CourseTime.objects.get(course_id=course_key, student_id=student.id)
-            except ObjectDoesNotExist:
-                filtered_coursetime = None
+                # Update database
+                try:
+                    #Using get beceause there will only be one entry for each student and each course
+                    filtered_coursetime = CourseTime.objects.get(course_id=course_key, student_id=student.id)
+                except ObjectDoesNotExist:
+                    filtered_coursetime = None
 
-            #Check for existing entry
-            if (filtered_coursetime == None):
-                # Create entry
-                CourseTime.objects.create(student_id=student.id, course_id=course_key,
-                                      time_spent=time_chapters_student)
-            else:
-                #Get the stored times
-                #print 'time filter'
-                #print filtered_coursetime.time_spent
-                original_coursetime = ast.literal_eval(filtered_coursetime.time_spent)
-                #d=original_coursetime[67]['sequentials'][76]
-                #original_coursetime[67]['sequentials'].pop(76)
-                #original_coursetime[67]['sequentials'].update(d)
-                #original_coursetime[67]['sequentials'][76]=original_coursetime[67]['sequentials'][77]
-                #original_coursetime[67]['sequentials'][76]=original_coursetime[67]['sequentials'].pop(77)
-                #print original_coursetime[67]['sequentials'][76]
-                print 'OriginalTImes'
-                print original_coursetime
-                #print d
-                #print 'CHapters time'
-                #time_chapters_student= str(time_chapters_student)
-                #time_chapters_student = compile(time_chapters_student, '<AST>', 'eval')
-                #time_chapters_student = eval(time_chapters_student, dict(Decimal=decimal.Decimal))
-                #time_chapters_student = ast.literal_eval(time_chapters_student)
-                #json_acceptable_string = str(time_chapters_student).replace("'", "\"")
-                #print json_acceptable_string
-                #Sustituir "" por ''
-                #time_chapters_student = json.loads(json_acceptable_string)
-                #print time_chapters_student
-                #time_chapters_student = ast.literal_eval(time_chapters_student)
-                #print type(original_coursetime)
-                #print type(time_chapters_student)
-                #Add the new times to the stored ones
-                total_coursetime = add_time_chapter_time(original_coursetime, time_chapters_student)
-                #print 'TotalCOurse'
-                #print total_coursetime
-                # Update entry
-                filtered_coursetime.time_spent = total_coursetime
-                filtered_coursetime.last_calc = timezone.now()
-                filtered_coursetime.save()
-            
-            # Add student time to his groups
-            time_chapters_all = add_time_chapter_time(time_chapters_all, time_chapters_student)
-            filtered_studentgrades = StudentGrades.objects.filter(course_id=course_key, student_id=student.id)
-            if filtered_studentgrades.count() > 0:
-                grade_group = filtered_studentgrades[0].grade_group
-                if grade_group == 'PROF':
-                    prof = 1
-                    time_chapters_prof = add_time_chapter_time(time_chapters_prof, time_chapters_student)
-                elif grade_group == 'OK':
-                    ok = 1
-                    time_chapters_ok = add_time_chapter_time(time_chapters_ok, time_chapters_student)
-                elif grade_group == 'FAIL':
-                    fail = 1
-                    time_chapters_fail = add_time_chapter_time(time_chapters_fail, time_chapters_student)
+                #Check for existing entry
+                if (filtered_coursetime == None):
+                    # Create entry
+                    CourseTime.objects.create(student_id=student.id, course_id=course_key,
+                                          time_spent=time_chapters_student)
+                else:
+                    #Get the stored times
+                    original_coursetime = ast.literal_eval(filtered_coursetime.time_spent)
+                    #Add the new times to the stored ones
+                    total_coursetime = add_time_chapter_time(original_coursetime, time_chapters_student)
+                    # Update entry
+                    filtered_coursetime.time_spent = total_coursetime
+                    filtered_coursetime.last_calc = timezone.now()
+                    filtered_coursetime.save()
+
+                # Add student time to his groups
+                time_chapters_all = add_time_chapter_time(time_chapters_all, time_chapters_student)
+                filtered_studentgrades = StudentGrades.objects.filter(course_id=course_key, student_id=student.id)
+                if filtered_studentgrades.count() > 0:
+                    grade_group = filtered_studentgrades[0].grade_group
+                    if grade_group == 'PROF':
+                        prof = 1
+                        time_chapters_prof = add_time_chapter_time(time_chapters_prof, time_chapters_student)
+                    elif grade_group == 'OK':
+                        ok = 1
+                        time_chapters_ok = add_time_chapter_time(time_chapters_ok, time_chapters_student)
+                    elif grade_group == 'FAIL':
+                        fail = 1
+                        time_chapters_fail = add_time_chapter_time(time_chapters_fail, time_chapters_student)
     
     # If there have been new events, add group all time chapters to database
     if newEvents == 1:
@@ -1324,7 +1282,7 @@ def update_DB_course_section_accesses(course_key):
     prof = 0
     ok = 0
     fail = 0
-
+    course = get_course_module(course_key)
     course_accesses = create_access_chapters(course_key)
     # Student groups time chapters
     course_accesses_all = copy.deepcopy(course_accesses)
@@ -1336,55 +1294,58 @@ def update_DB_course_section_accesses(course_key):
     
     # Add students time chapters to database
     for student in students:
-        course_accesses_student = copy.deepcopy(course_accesses)
-        #Dictionary with the new accesses
-        course_accesses_student = get_student_section_accesses(course_key,
-                                                               student,
-                                                               course_accesses_student)
-        #If there are new accesses
-        if course_accesses_student != None:
-            
-            newEvents = 1
+        staff_access = has_access(student, 'staff', course).has_access
+        instructor_access = has_access(student, 'instructor', course).has_access
+        if not (staff_access or instructor_access):
+            course_accesses_student = copy.deepcopy(course_accesses)
+            #Dictionary with the new accesses
+            course_accesses_student = get_student_section_accesses(course_key,
+                                                                   student,
+                                                                   course_accesses_student)
+            #If there are new accesses
+            if course_accesses_student != None:
 
-            # Update database
-            try:
-                #Using get beceause there will only be one entry for each student and each course
-                courseaccesses_filtered = CourseAccesses.objects.get(course_id=course_key, student_id=student.id)
-            except ObjectDoesNotExist:
-                courseaccesses_filtered = None
-            
-            #Check for existing entry
-            if (courseaccesses_filtered == None):
-                # Create entry
-                CourseAccesses.objects.create(student_id=student.id, course_id=course_key,
-                                          accesses=course_accesses_student)
-            else:
-                #Get the stored accesses
-                original_accesses = ast.literal_eval(courseaccesses_filtered.accesses)
-                #Add the new accesses to the stored ones
-                total_course_accesses = add_student_accesses(original_accesses, course_accesses_student)
-                #print 'Total_course_accesses'
-                #print total_course_accesses
-                # Update entry
-                courseaccesses_filtered.accesses = total_course_accesses
-                courseaccesses_filtered.last_calc = timezone.now()
-                courseaccesses_filtered.save()
-        
-            # Add student time to his groups
-            course_accesses_all = add_student_accesses(course_accesses_all, course_accesses_student)
-            studentgrades_filtered = StudentGrades.objects.filter(course_id=course_key, student_id=student.id)
-            if studentgrades_filtered.count() > 0:
-                grade_group = studentgrades_filtered[0].grade_group
-                if grade_group == 'PROF':
-                    prof = 1
-                    course_accesses_prof = add_student_accesses(course_accesses_prof, course_accesses_student)
-                elif grade_group == 'OK':
-                    ok = 1
-                    course_accesses_ok = add_student_accesses(course_accesses_ok, course_accesses_student)
-                elif grade_group == 'FAIL':
-                    fail = 1
-                    course_accesses_fail = add_student_accesses(course_accesses_fail, course_accesses_student)
-    
+                newEvents = 1
+
+                # Update database
+                try:
+                    #Using get beceause there will only be one entry for each student and each course
+                    courseaccesses_filtered = CourseAccesses.objects.get(course_id=course_key, student_id=student.id)
+                except ObjectDoesNotExist:
+                    courseaccesses_filtered = None
+
+                #Check for existing entry
+                if (courseaccesses_filtered == None):
+                    # Create entry
+                    CourseAccesses.objects.create(student_id=student.id, course_id=course_key,
+                                              accesses=course_accesses_student)
+                else:
+                    #Get the stored accesses
+                    original_accesses = ast.literal_eval(courseaccesses_filtered.accesses)
+                    #Add the new accesses to the stored ones
+                    total_course_accesses = add_student_accesses(original_accesses, course_accesses_student)
+                    #print 'Total_course_accesses'
+                    #print total_course_accesses
+                    # Update entry
+                    courseaccesses_filtered.accesses = total_course_accesses
+                    courseaccesses_filtered.last_calc = timezone.now()
+                    courseaccesses_filtered.save()
+
+                # Add student time to his groups
+                course_accesses_all = add_student_accesses(course_accesses_all, course_accesses_student)
+                studentgrades_filtered = StudentGrades.objects.filter(course_id=course_key, student_id=student.id)
+                if studentgrades_filtered.count() > 0:
+                    grade_group = studentgrades_filtered[0].grade_group
+                    if grade_group == 'PROF':
+                        prof = 1
+                        course_accesses_prof = add_student_accesses(course_accesses_prof, course_accesses_student)
+                    elif grade_group == 'OK':
+                        ok = 1
+                        course_accesses_ok = add_student_accesses(course_accesses_ok, course_accesses_student)
+                    elif grade_group == 'FAIL':
+                        fail = 1
+                        course_accesses_fail = add_student_accesses(course_accesses_fail, course_accesses_student)
+
     # If there have been new events, add group accesses to database
     if newEvents == 1:
 
@@ -2630,96 +2591,98 @@ def time_schedule(course_id):
     students = get_course_students(course_id)
     
     newEvents = 0
-
+    course = get_course_module(course_id)
     morningTimeStudentCourse = 0
     afternoonTimeStudentCourse = 0
     nightTimeStudentCourse = 0
     
     for student in students:
+        staff_access = has_access(student, 'staff', course).has_access
+        instructor_access = has_access(student, 'instructor', course).has_access
+        if not (staff_access or instructor_access):
+            firstEventOfSeries = None
+            previousEvent = None
 
-        firstEventOfSeries = None
-        previousEvent = None     
-        
-        morningTimeStudent = 0
-        afternoonTimeStudent = 0
-        nightTimeStudent = 0
-        
-        currentSchedule = ""
-        
-        studentEvents = get_new_events_sql(course_id, student, 'timeSchedule')
-        
-        #If there are new events
-        if studentEvents != None:      
-            
-            newEvents = 1
+            morningTimeStudent = 0
+            afternoonTimeStudent = 0
+            nightTimeStudent = 0
 
-            for currentEvent in studentEvents:
-            
-                if(currentSchedule == ""):
-                    currentSchedule = current_schedule(currentEvent.dtcreated.hour)
-                    if(previousEvent == None):                    
-                        firstEventOfSeries = currentEvent
+            currentSchedule = ""
+
+            studentEvents = get_new_events_sql(course_id, student, 'timeSchedule')
+
+            #If there are new events
+            if studentEvents != None:
+
+                newEvents = 1
+
+                for currentEvent in studentEvents:
+
+                    if(currentSchedule == ""):
+                        currentSchedule = current_schedule(currentEvent.dtcreated.hour)
+                        if(previousEvent == None):
+                            firstEventOfSeries = currentEvent
+                        else:
+                            firstEventOfSeries = previousEvent
                     else:
-                        firstEventOfSeries = previousEvent
-                else:
-                    if((minutes_between(previousEvent.dtcreated,currentEvent.dtcreated) >= 30) or currentSchedule != current_schedule(currentEvent.dtcreated.hour)):
-                        print 'currentEvent'
-                        print currentEvent                    
-                        if(currentSchedule == "morning"):
-                            morningTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
-                        elif(currentSchedule == "afternoon"):
-                            afternoonTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
-                            print 'afternoonTimeStudent'
-                            print afternoonTimeStudent
-                        elif(currentSchedule == "night"):
-                            nightTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
-                        
-                        currentSchedule = ""
-                            
-                previousEvent = currentEvent
-            
-            if(currentSchedule == "morning"):
-                morningTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
-            elif(currentSchedule == "afternoon"):
-                afternoonTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
-                print 'afternoonTimeStudent'
-                print afternoonTimeStudent
-            elif(currentSchedule == "night"):
-                nightTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
-        
-            morningTimeStudentCourse += morningTimeStudent
-            afternoonTimeStudentCourse += afternoonTimeStudent
-            nightTimeStudentCourse += nightTimeStudent
-        
-            timeSchedule = {'morningTime' : morningTimeStudent,
-                        'afternoonTime' : afternoonTimeStudent,
-                        'nightTime' : nightTimeStudent}
-            
-            # Update database
-            try:
-                #Using get beceause there will only be one entry for each student and each course
-                studentTimeSchedule = TimeSchedule.objects.get(course_id=course_id, student_id=student.id)
-            except ObjectDoesNotExist:
-                studentTimeSchedule = None
-            
-            #Check for existing entry
-            if studentTimeSchedule == None:
-                # Create entry
-                TimeSchedule.objects.create(student_id=student.id, course_id=course_id, time_schedule=timeSchedule)
-            else:
-                # Update entry
-                print 'Update entry'
-                print timeSchedule['afternoonTime']
-                print afternoonTimeStudentCourse
-                studentTimeScheduleValue = ast.literal_eval(studentTimeSchedule.time_schedule)
-                print studentTimeScheduleValue['afternoonTime']
-                totalTimeSchedule = {'morningTime' : studentTimeScheduleValue['morningTime']+timeSchedule['morningTime'],
-                          'afternoonTime' : studentTimeScheduleValue['afternoonTime']+timeSchedule['afternoonTime'],
-                          'nightTime' : studentTimeScheduleValue['nightTime']+timeSchedule['nightTime']} 
+                        if((minutes_between(previousEvent.dtcreated,currentEvent.dtcreated) >= 30) or currentSchedule != current_schedule(currentEvent.dtcreated.hour)):
+                            print 'currentEvent'
+                            print currentEvent
+                            if(currentSchedule == "morning"):
+                                morningTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
+                            elif(currentSchedule == "afternoon"):
+                                afternoonTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
+                                print 'afternoonTimeStudent'
+                                print afternoonTimeStudent
+                            elif(currentSchedule == "night"):
+                                nightTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
 
-                studentTimeSchedule.time_schedule = totalTimeSchedule
-                studentTimeSchedule.last_calc = datetime.datetime.now()
-                studentTimeSchedule.save()
+                            currentSchedule = ""
+
+                    previousEvent = currentEvent
+
+                if(currentSchedule == "morning"):
+                    morningTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
+                elif(currentSchedule == "afternoon"):
+                    afternoonTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
+                    print 'afternoonTimeStudent'
+                    print afternoonTimeStudent
+                elif(currentSchedule == "night"):
+                    nightTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
+
+                morningTimeStudentCourse += morningTimeStudent
+                afternoonTimeStudentCourse += afternoonTimeStudent
+                nightTimeStudentCourse += nightTimeStudent
+
+                timeSchedule = {'morningTime' : morningTimeStudent,
+                            'afternoonTime' : afternoonTimeStudent,
+                            'nightTime' : nightTimeStudent}
+
+                # Update database
+                try:
+                    #Using get beceause there will only be one entry for each student and each course
+                    studentTimeSchedule = TimeSchedule.objects.get(course_id=course_id, student_id=student.id)
+                except ObjectDoesNotExist:
+                    studentTimeSchedule = None
+
+                #Check for existing entry
+                if studentTimeSchedule == None:
+                    # Create entry
+                    TimeSchedule.objects.create(student_id=student.id, course_id=course_id, time_schedule=timeSchedule)
+                else:
+                    # Update entry
+                    print 'Update entry'
+                    print timeSchedule['afternoonTime']
+                    print afternoonTimeStudentCourse
+                    studentTimeScheduleValue = ast.literal_eval(studentTimeSchedule.time_schedule)
+                    print studentTimeScheduleValue['afternoonTime']
+                    totalTimeSchedule = {'morningTime' : studentTimeScheduleValue['morningTime']+timeSchedule['morningTime'],
+                              'afternoonTime' : studentTimeScheduleValue['afternoonTime']+timeSchedule['afternoonTime'],
+                              'nightTime' : studentTimeScheduleValue['nightTime']+timeSchedule['nightTime']}
+
+                    studentTimeSchedule.time_schedule = totalTimeSchedule
+                    studentTimeSchedule.last_calc = datetime.datetime.now()
+                    studentTimeSchedule.save()
     
     timeScheduleCourse = {'morningTime' : morningTimeStudentCourse,
                           'afternoonTime' : afternoonTimeStudentCourse,
@@ -2849,7 +2812,7 @@ def update_DB_daily_time_prob_and_vids(course_key=None):
         video_names, video_module_keys, video_durations = get_info_videos_descriptors(videos_in)
         problem_names = [x.display_name_with_default.encode('utf-8') for x in problems_in]
         problem_ids = [x.location for x in problems_in]
-        
+        students = get_course_students(course_key)
         # List of UserVideoIntervals
         users_video_intervals = []
         users_with_video_events = []
@@ -2857,27 +2820,31 @@ def update_DB_daily_time_prob_and_vids(course_key=None):
         users_time_on_problems = []
         users_with_problem_events = []
         
-        for username_in in usernames_in:
-            for video_module_key in video_module_keys:
-                interval_start, interval_end, vid_start_time, vid_end_time = find_video_intervals(course_key, username_in, video_module_key, 'videoDailyTime')
-                # Just users with video events
-                if interval_start is not None and interval_end is not None and vid_start_time is not None and vid_end_time is not None:
-                    # If a user has events for more than one video, his name will be repeated in users_with_video_events
-                    users_with_video_events.append(username_in)
-                    disjointed_start, disjointed_end = video_len_watched(interval_start, interval_end)
-                    users_video_intervals.append(UserVideoIntervals(username_in, video_module_key, 
-                                                               interval_start, interval_end,
-                                                               vid_start_time, vid_end_time,
-                                                               disjointed_start, disjointed_end))    
- 
-            for problem_id in problem_ids:
-                problem_time, days, daily_time = time_on_problem(course_key, username_in, problem_id, 'problemDailyTime')
-                # Just users with problem events
-                if problem_time is not None and days is not None and daily_time is not None:
-                    # If a user has events for more than one problem, his name will be repeated in users_with_problem_events
-                    users_with_problem_events.append(username_in)
-                    users_time_on_problems.append(UserTimeOnProblems(username_in, problem_id, 
-                                                                 problem_time, days, daily_time))   
+        for k,username_in in enumerate(usernames_in):
+            staff_access = has_access(students[k], 'staff', course).has_access
+            instructor_access = has_access(students[k], 'instructor', course).has_access
+            if not (staff_access or instructor_access):
+                print username_in
+                for video_module_key in video_module_keys:
+                    interval_start, interval_end, vid_start_time, vid_end_time = find_video_intervals(course_key, username_in, video_module_key, 'videoDailyTime')
+                    # Just users with video events
+                    if interval_start is not None and interval_end is not None and vid_start_time is not None and vid_end_time is not None:
+                        # If a user has events for more than one video, his name will be repeated in users_with_video_events
+                        users_with_video_events.append(username_in)
+                        disjointed_start, disjointed_end = video_len_watched(interval_start, interval_end)
+                        users_video_intervals.append(UserVideoIntervals(username_in, video_module_key,
+                                                                   interval_start, interval_end,
+                                                                   vid_start_time, vid_end_time,
+                                                                   disjointed_start, disjointed_end))
+
+                for problem_id in problem_ids:
+                    problem_time, days, daily_time = time_on_problem(course_key, username_in, problem_id, 'problemDailyTime')
+                    # Just users with problem events
+                    if problem_time is not None and days is not None and daily_time is not None:
+                        # If a user has events for more than one problem, his name will be repeated in users_with_problem_events
+                        users_with_problem_events.append(username_in)
+                        users_time_on_problems.append(UserTimeOnProblems(username_in, problem_id,
+                                                                     problem_time, days, daily_time))
         # DailyConsumption table data
         accum_vid_days = []
         accum_vid_daily_time = []
@@ -3009,8 +2976,7 @@ def update_DB_problem_time_distribution(course_key=None):
         problems_in = videos_problems_in(course)[1]
         problem_names = [x.display_name_with_default.encode('utf-8') for x in problems_in]
         problem_ids = [x.location for x in problems_in]
-        #print 'problems_ids 1'
-        #print problem_ids
+        students = get_course_students(course_key)
         # List of UserTimeOnProblems
         users_time_on_problems = []
         users_with_problem_events = []
@@ -3018,48 +2984,29 @@ def update_DB_problem_time_distribution(course_key=None):
         users_with_problem_events_problem_names = []
         indexes = []
 
-        for username_in in usernames_in:
-            #print 'users'
-            #print 'problems_ids 1'
-            #print problem_ids
-            for problem_id in problem_ids:
-                #print 'PROBLEMS_IDS 2'
-                #print problem_id
-                problem_time, days, daily_time = time_on_problem(course_key, username_in, problem_id, 'problemTimeDistribution')
-                #print 'TIMES todos vacios'
-                #print problem_time
-                #print days
-                #print daily_time
-                # Just users with problem events
-                if problem_time is not None and days is not None and daily_time is not None:
-                    
-
-                    # If a user has events for more than one problem, his name will be repeated in users_with_problem_events
-                    users_with_problem_events.append(username_in)
-                    # Problem info will be in the same index in as problem_id in problem_id
-                    index_problem = problem_ids.index(problem_id)
-                    indexes.append(index_problem)
-                    # Save the id of problems with new events
-                    users_with_problem_events_problem_ids.append(problem_ids[index_problem])
-                    # Save the name of problems with new events
-                    users_with_problem_events_problem_names.append(problem_names[index_problem])
-                    #print 'USERNAME problem_time'
-                    #print problem_time
-                    users_time_on_problems.append(UserTimeOnProblems(username_in, problem_id, problem_time, days, daily_time))   
-                    #print 'USERNAME'
-                    #print username_in  
-                    #print users_time_on_problems     
+        for k,username_in in enumerate(usernames_in):
+            staff_access = has_access(students[k], 'staff', course).has_access
+            instructor_access = has_access(students[k], 'instructor', course).has_access
+            if not (staff_access or instructor_access):
+                for problem_id in problem_ids:
+                    problem_time, days, daily_time = time_on_problem(course_key, username_in, problem_id, 'problemTimeDistribution')
+                    # Just users with problem events
+                    if problem_time is not None and days is not None and daily_time is not None:
+                        # If a user has events for more than one problem, his name will be repeated in users_with_problem_events
+                        users_with_problem_events.append(username_in)
+                        # Problem info will be in the same index in as problem_id in problem_id
+                        index_problem = problem_ids.index(problem_id)
+                        indexes.append(index_problem)
+                        # Save the id of problems with new events
+                        users_with_problem_events_problem_ids.append(problem_ids[index_problem])
+                        # Save the name of problems with new events
+                        users_with_problem_events_problem_names.append(problem_names[index_problem])
+                        users_time_on_problems.append(UserTimeOnProblems(username_in, problem_id, problem_time, days, daily_time))
         # ConsumptionModule table data
         accum_problem_time = [0] * len(problem_ids)
 
         # Delete repeated values
         sorted_users_with_problem_events = sorted(set(users_with_problem_events))
-        """print 'SORTED'
-        print sorted_users_with_problem_events
-        print 'users_with_problem_events'
-        print users_with_problem_events
-        print 'USERNAMES_IN'
-        print usernames_in"""
         for username_in in sorted_users_with_problem_events:
             kw_consumption_module['student'] = username_in
             #problem modules
@@ -3070,16 +3017,8 @@ def update_DB_problem_time_distribution(course_key=None):
             user_problem_ids = users_with_problem_events_problem_ids[low_index:high_index]
             user_problem_names = users_with_problem_events_problem_names[low_index:high_index]
             problem_indexes = indexes[low_index:high_index]
-            #print 'time_x_problem'
-            #print username_in
-            #print low_index
-            #print high_index
-            #print user_problem_ids
-            #print time_x_problem
             if time_x_problem is not None:
                 for j in range(0,len(problem_indexes)):
-                    #print 'USERNAME IN TIMEXPROBLEM'
-                    #print username_in
                     accum_problem_time[problem_indexes.index(j)] += time_x_problem[j]
                     
                 for i in range(0,len(user_problem_ids)):
@@ -3144,8 +3083,6 @@ def update_DB_video_time_distribution(course_key=None):
         usernames_in = [x.username.encode('utf-8') for x in CourseEnrollment.objects.users_enrolled_in(course_key)]#Codigo J.A.Gascon
         videos_in = videos_problems_in(course)[0]
         video_names, video_module_keys, video_durations = get_info_videos_descriptors(videos_in)
-        print 'VIDEO DURATIONS'
-        print video_durations
         # List of UserVideoIntervals
         users_video_intervals = []
         users_with_video_events = []
@@ -3153,28 +3090,32 @@ def update_DB_video_time_distribution(course_key=None):
         users_with_video_events_video_names = []
         users_with_video_events_video_durations = []
         indexes = []
+        students = get_course_students(course_key)
         
-        for username_in in usernames_in:
-            for video_module_key in video_module_keys:
-                interval_start, interval_end, vid_start_time, vid_end_time = find_video_intervals(course_key,username_in, video_module_key, 'videoTimeDistribution')
-                # Just users with video events
-                if interval_start is not None and interval_end is not None and vid_start_time is not None and vid_end_time is not None:
-                    # If a user has events for more than one video, his name will be repeated in users_with_video_events
-                    users_with_video_events.append(username_in)
-                    # Video info will be in the same index in as video_module_key in video_module_keys
-                    index_video = video_module_keys.index(video_module_key)
-                    indexes.append(index_video)
-                    # Save the id of the video for which the user has new events
-                    users_with_video_events_video_ids.append(video_module_keys[index_video])
-                    # Save the name of the video for which the user has new events
-                    users_with_video_events_video_names.append(video_names[index_video])
-                    # Save the duration of the video for which the user has new events
-                    users_with_video_events_video_durations.append(video_durations[index_video])
-                    disjointed_start, disjointed_end = video_len_watched(interval_start, interval_end)
-                    users_video_intervals.append(UserVideoIntervals(username_in, video_module_key, 
-                                                               interval_start, interval_end,
-                                                               vid_start_time, vid_end_time,
-                                                               disjointed_start, disjointed_end))         
+        for k,username_in in enumerate(usernames_in):
+            staff_access = has_access(students[k], 'staff', course).has_access
+            instructor_access = has_access(students[k], 'instructor', course).has_access
+            if not (staff_access or instructor_access):
+                for video_module_key in video_module_keys:
+                    interval_start, interval_end, vid_start_time, vid_end_time = find_video_intervals(course_key,username_in, video_module_key, 'videoTimeDistribution')
+                    # Just users with video events
+                    if interval_start is not None and interval_end is not None and vid_start_time is not None and vid_end_time is not None:
+                        # If a user has events for more than one video, his name will be repeated in users_with_video_events
+                        users_with_video_events.append(username_in)
+                        # Video info will be in the same index in as video_module_key in video_module_keys
+                        index_video = video_module_keys.index(video_module_key)
+                        indexes.append(index_video)
+                        # Save the id of the video for which the user has new events
+                        users_with_video_events_video_ids.append(video_module_keys[index_video])
+                        # Save the name of the video for which the user has new events
+                        users_with_video_events_video_names.append(video_names[index_video])
+                        # Save the duration of the video for which the user has new events
+                        users_with_video_events_video_durations.append(video_durations[index_video])
+                        disjointed_start, disjointed_end = video_len_watched(interval_start, interval_end)
+                        users_video_intervals.append(UserVideoIntervals(username_in, video_module_key,
+                                                                   interval_start, interval_end,
+                                                                   vid_start_time, vid_end_time,
+                                                                   disjointed_start, disjointed_end))
         # ConsumptionModule table data
         accum_all_video_time = [0] * len(video_module_keys)
 
@@ -3261,45 +3202,48 @@ def update_DB_video_events(course_key=None):
         usernames_in = [x.username.encode('utf-8') for x in CourseEnrollment.objects.users_enrolled_in(course_key)]#Codigo J.A.Gascon
         videos_in = videos_problems_in(course)[0]
         video_names, video_module_keys, video_durations = get_info_videos_descriptors(videos_in)
-        print 'VIDEO DURATIONS'
-        print video_durations       
+        students = get_course_students(course_key)
         # VideoEvents table data
         VIDEO_EVENTS = ['play', 'pause', 'change_speed', 'seek_from', 'seek_to']
         class_events_times = [[],[],[],[],[]]
-        for username_in in usernames_in:
-            kw_video_events['student'] = username_in
-            for video_module_key in video_module_keys:
-                kw_video_events['module_key'] = video_module_key
-                kw_video_events['display_name'] = video_names[video_module_keys.index(video_module_key)]
-                events_times = get_video_events_times(course_key, username_in, video_module_key)
-                print 'EVENT TIMES'
-                print events_times
-                if events_times is None:
-                    continue
-                for event in VIDEO_EVENTS:
-                    kw_video_events[event + '_events'] = events_times[VIDEO_EVENTS.index(event)]
-                try:
-                    new_entry = VideoEvents.objects.get(student=kw_video_events['student'], module_key=kw_video_events['module_key'])
-                    # Add new values to original ones
-                    play_events = ast.literal_eval(new_entry.play_events) + kw_video_events['play_events']
-                    pause_events = ast.literal_eval(new_entry.pause_events) + kw_video_events['pause_events']
-                    change_speed_events = ast.literal_eval(new_entry.change_speed_events) + kw_video_events['change_speed_events']
-                    seek_from_events = ast.literal_eval(new_entry.seek_from_events) + kw_video_events['seek_from_events']
-                    seek_to_events = ast.literal_eval(new_entry.seek_to_events) + kw_video_events['seek_to_events']   
-                    print 'play_events'
-                    print play_events
-                    print change_speed_events
-                    print seek_from_events
-                    # Total values
-                    new_entry.play_events = json.dumps(play_events)
-                    new_entry.pause_events = json.dumps(pause_events)
-                    new_entry.change_speed_events = json.dumps(change_speed_events)
-                    new_entry.seek_from_events = json.dumps(seek_from_events)
-                    new_entry.seek_to_events = json.dumps(seek_to_events)
-                    
-                except VideoEvents.DoesNotExist:
-                    new_entry = VideoEvents(**kw_video_events)                
-                new_entry.save()
+        for k,username_in in enumerate(usernames_in):
+            staff_access = has_access(students[k], 'staff', course).has_access
+            instructor_access = has_access(students[k], 'instructor', course).has_access
+            if not (staff_access or instructor_access):
+                kw_video_events['student'] = username_in
+                for video_module_key in video_module_keys:
+                    kw_video_events['module_key'] = video_module_key
+                    kw_video_events['display_name'] = video_names[video_module_keys.index(video_module_key)]
+                    events_times = get_video_events_times(course_key, username_in, video_module_key)
+                    print 'EVENT TIMES'
+                    print events_times
+                    print username_in
+                    if events_times is None:
+                        continue
+                    for event in VIDEO_EVENTS:
+                        kw_video_events[event + '_events'] = events_times[VIDEO_EVENTS.index(event)]
+                    try:
+                        new_entry = VideoEvents.objects.get(student=kw_video_events['student'], module_key=kw_video_events['module_key'])
+                        # Add new values to original ones
+                        play_events = ast.literal_eval(new_entry.play_events) + kw_video_events['play_events']
+                        pause_events = ast.literal_eval(new_entry.pause_events) + kw_video_events['pause_events']
+                        change_speed_events = ast.literal_eval(new_entry.change_speed_events) + kw_video_events['change_speed_events']
+                        seek_from_events = ast.literal_eval(new_entry.seek_from_events) + kw_video_events['seek_from_events']
+                        seek_to_events = ast.literal_eval(new_entry.seek_to_events) + kw_video_events['seek_to_events']
+                        print 'play_events'
+                        print play_events
+                        print change_speed_events
+                        print seek_from_events
+                        # Total values
+                        new_entry.play_events = json.dumps(play_events)
+                        new_entry.pause_events = json.dumps(pause_events)
+                        new_entry.change_speed_events = json.dumps(change_speed_events)
+                        new_entry.seek_from_events = json.dumps(seek_from_events)
+                        new_entry.seek_to_events = json.dumps(seek_to_events)
+
+                    except VideoEvents.DoesNotExist:
+                        new_entry = VideoEvents(**kw_video_events)
+                    new_entry.save()
     else:
         pass
 
@@ -3576,7 +3520,7 @@ def update_DB_repetition_video_intervals(course_key=None):
         ids_in = [x.id for x in CourseEnrollment.objects.users_enrolled_in(course_key)]#Codigo J.A.Gascon
         videos_in = videos_problems_in(course)[0]
         video_names, video_module_keys, video_durations = get_info_videos_descriptors(videos_in)
-        
+        students = get_course_students(course_key)
         # List of UserVideoIntervals
         users_video_intervals = []
         users_with_video_events = []
@@ -3585,25 +3529,28 @@ def update_DB_repetition_video_intervals(course_key=None):
         users_with_video_events_ids = []
         users_intervals_ids = []
         
-        for username_in in usernames_in:
-            for video_module_key in video_module_keys:
-                interval_start, interval_end, vid_start_time, vid_end_time = find_video_intervals(course_key,username_in, video_module_key, 'videoIntervalsRepetition')
-                if interval_start is not None and interval_end is not None and vid_start_time is not None and vid_end_time is not None:
-                    # If a user has events for more than one video, his name will be repeated in users_with_video_events
-                    users_with_video_events.append(username_in)
-                    # If a user has events for more than one video, his id will be repeated in users_with_video_events_ids
-                    users_with_video_events_ids.append(ids_in[usernames_in.index(username_in)])
-                    # Video info will be in the same index in as video_module_key in video_module_keys
-                    index_video = video_module_keys.index(video_module_key)
-                    # Save the id of the video for which the user has new events
-                    users_with_video_events_video_ids.append(video_module_keys[index_video])
-                    # Save the name of the video for which the user has new events
-                    users_with_video_events_video_names.append(video_names[index_video])
-                    disjointed_start, disjointed_end = video_len_watched(interval_start, interval_end)
-                    users_video_intervals.append(UserVideoIntervals(username_in, video_module_key, 
-                                                               interval_start, interval_end,
-                                                               vid_start_time, vid_end_time,
-                                                               disjointed_start, disjointed_end))      
+        for k,username_in in enumerate(usernames_in):
+            staff_access = has_access(students[k], 'staff', course).has_access
+            instructor_access = has_access(students[k], 'instructor', course).has_access
+            if not (staff_access or instructor_access):
+                for video_module_key in video_module_keys:
+                    interval_start, interval_end, vid_start_time, vid_end_time = find_video_intervals(course_key,username_in, video_module_key, 'videoIntervalsRepetition')
+                    if interval_start is not None and interval_end is not None and vid_start_time is not None and vid_end_time is not None:
+                        # If a user has events for more than one video, his name will be repeated in users_with_video_events
+                        users_with_video_events.append(username_in)
+                        # If a user has events for more than one video, his id will be repeated in users_with_video_events_ids
+                        users_with_video_events_ids.append(ids_in[usernames_in.index(username_in)])
+                        # Video info will be in the same index in as video_module_key in video_module_keys
+                        index_video = video_module_keys.index(video_module_key)
+                        # Save the id of the video for which the user has new events
+                        users_with_video_events_video_ids.append(video_module_keys[index_video])
+                        # Save the name of the video for which the user has new events
+                        users_with_video_events_video_names.append(video_names[index_video])
+                        disjointed_start, disjointed_end = video_len_watched(interval_start, interval_end)
+                        users_video_intervals.append(UserVideoIntervals(username_in, video_module_key,
+                                                                   interval_start, interval_end,
+                                                                   vid_start_time, vid_end_time,
+                                                                   disjointed_start, disjointed_end))
 
         # VideoIntervals table data
         for video_name, video_id in zip(video_names, video_module_keys):
@@ -3966,13 +3913,7 @@ def update_DB_video_time_watched(course_key=None):
         course = get_course_by_id(course_key, depth=None)
         usernames_in = [x.username.encode('utf-8') for x in CourseEnrollment.objects.users_enrolled_in(course_key)]#Codigo J.A.Gascon
         videos_in = videos_problems_in(course)[0]
-        #print 'videos_IN'
-        #print videos_in
         video_names, video_module_keys, video_durations = get_info_videos_descriptors(videos_in)
-        #print 'VIDEOS'
-        #print video_names 
-        #print video_module_keys
-        #print video_durations
         # List of UserVideoIntervals
         users_video_intervals = []
         users_with_video_events = []
@@ -3980,30 +3921,34 @@ def update_DB_video_time_watched(course_key=None):
         users_with_video_events_video_names = []
         users_with_video_events_video_durations = []
         indexes = []
+        students = get_course_students(course_key)
         
-        for username_in in usernames_in:
-            for video_module_key in video_module_keys:
-                interval_start, interval_end, vid_start_time, vid_end_time = find_video_intervals(course_key,username_in, video_module_key, 'videoTimeWatched')
-                # Just users with video events
-                if interval_start is not None and interval_end is not None and vid_start_time is not None and vid_end_time is not None:
-                    # If a user has events for more than one video, his name will be repeated in users_with_video_events
-                    users_with_video_events.append(username_in)
-                    # Video info will be in the same index in as video_module_key in video_module_keys
-                    index_video = video_module_keys.index(video_module_key)
-                    indexes.append(index_video)
-                    #print 'INDEX_VIDEO'
-                    #print index_video
-                    # Save the id of the video for which the user has new events
-                    users_with_video_events_video_ids.append(video_module_keys[index_video])
-                    # Save the name of the video for which the user has new events
-                    users_with_video_events_video_names.append(video_names[index_video])
-                    # Save the duration of the video for which the user has new events
-                    users_with_video_events_video_durations.append(video_durations[index_video])
-                    disjointed_start, disjointed_end = video_len_watched(interval_start, interval_end)
-                    users_video_intervals.append(UserVideoIntervals(username_in, video_module_key, 
-                                                               interval_start, interval_end,
-                                                               vid_start_time, vid_end_time,
-                                                               disjointed_start, disjointed_end))         
+        for k,username_in in enumerate(usernames_in):
+            staff_access = has_access(students[k], 'staff', course).has_access
+            instructor_access = has_access(students[k], 'instructor', course).has_access
+            if not (staff_access or instructor_access):
+                for video_module_key in video_module_keys:
+                    interval_start, interval_end, vid_start_time, vid_end_time = find_video_intervals(course_key,username_in, video_module_key, 'videoTimeWatched')
+                    # Just users with video events
+                    if interval_start is not None and interval_end is not None and vid_start_time is not None and vid_end_time is not None:
+                        # If a user has events for more than one video, his name will be repeated in users_with_video_events
+                        users_with_video_events.append(username_in)
+                        # Video info will be in the same index in as video_module_key in video_module_keys
+                        index_video = video_module_keys.index(video_module_key)
+                        indexes.append(index_video)
+                        #print 'INDEX_VIDEO'
+                        #print index_video
+                        # Save the id of the video for which the user has new events
+                        users_with_video_events_video_ids.append(video_module_keys[index_video])
+                        # Save the name of the video for which the user has new events
+                        users_with_video_events_video_names.append(video_names[index_video])
+                        # Save the duration of the video for which the user has new events
+                        users_with_video_events_video_durations.append(video_durations[index_video])
+                        disjointed_start, disjointed_end = video_len_watched(interval_start, interval_end)
+                        users_video_intervals.append(UserVideoIntervals(username_in, video_module_key,
+                                                                   interval_start, interval_end,
+                                                                   vid_start_time, vid_end_time,
+                                                                   disjointed_start, disjointed_end))
         # VideoTimeWatched table data
         accum_video_percentages = [0] * len(video_module_keys)
         accum_all_video_time = [0] * len(video_module_keys)

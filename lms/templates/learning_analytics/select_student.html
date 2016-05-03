@@ -6,7 +6,7 @@
   <select id="${select_id}">
     <option value="&#35;average" selected>All students</option>
     <optgroup label="Students">
-      % for student in usernames_in:
+      % for student in names_students:
       <option${_(" value=\"{stu}\">{stu}").format(stu=student)}</option>
       % endfor
     </optgroup>
