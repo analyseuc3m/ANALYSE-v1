@@ -73,11 +73,13 @@ You can add this code between the lines ' <i>"CREDIT_PROVIDER_SECRET_KEYS": {}, 
 </li>
 </ul>
 <br />
+<br />
 You have to migrate the tables of MySQL with:
 <br />
 ./manage.py lms makemigrations learning_analytics --settings=devstack_analytics
 <br />
 ./manage.py lms migrate learning_analytics --settings=devstack_analytics
+<br />
 <br />
 If your new tab isn't showing up, try the following:
 <br />
@@ -86,12 +88,13 @@ sudo su edxapp
 pip install -e /edx/app/edxapp/edx-platform
 <br />
 <br />
-Moreover, if you want put the module in a course created before, you have that export the course and modify:
+Moreover, if you want put the module in a course created before, you have to export the course and modify:
 <br />
 policies/folder/policy.json, add: "name":"learning_analytics" and "type":"learning_analytics".
 <br />
 <br />
 In order for the high level indicators to be calculated, we will not be doing it in real time as it would mean a lot of processing and extremely high amounts of data managing, and it would slow down the platform. We compute them using the Celery Beat scheduler, which starts task at regular intervals. We will use this tool so as to calculate every indicator in the module every 30 seconds. Celery Beat needs to be activated and configured so that it run the task which updates the indicators in background.
+<br />
 <br />
 Note: If you install the module in mode of OpenedX Fullstack, you need install google-api-python-client.
 </ul>
