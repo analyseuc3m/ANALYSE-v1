@@ -34,21 +34,21 @@ For the installation of ANALYSE, you have two options:
 <br />
 The functionality of ANALYSE has been added as a new django application. If you want to add ANALYSE in Open edX in your Open edX release, you have to add different files and folders of this repository:
 <ul>
-<li>/lms/djangoapps/learning_analytics/*</li>
-<li>/lms/static/js/learning_analytics/*</li>
-<li>/lms/static/sass/course/learning_analytics/_learning_analytics.scss</li>
-<li>/lms/templates/learning_analytics/*</li>
+<li>/lms/djangoapps/learning_analytics/</li>
+<li>/lms/static/js/learning_analytics/</li>
+<li>/lms/static/sass/course/learning_analytics/</li>
+<li>/lms/templates/learning_analytics/</li>
 <li>/lms/envs/devstack_analytics.py</li>
 </ul>
 <br />
-Moreover, you have to replace the files from Open edX that has been modified to introduce ANALYSE:
+Moreover, you have to rewrite the files from Open edX that has been modified to introduce ANALYSE (you can compare your files with the repository, with diff) :
 <ul>
-<li>/setup.py</li>
-<li>/lms/djangoapps/courseware/tabs.py</li>
-<li>/common/lib/xmodule/xmodule/tabs.py</li>
-<li>/lms/static/sass/_build-course.scss</li>
-<li>/lms/urls.py</li>
-<li>/common/djangoapps/track/backends/django.py</li>
+<li>/setup.py: Add the line "learning_analytics = lms.djangoapps.courseware.tabs:LATab"</li>
+<li>/lms/djangoapps/courseware/tabs.py: Add class LATab(CourseTab)</li>
+<li>/common/lib/xmodule/xmodule/tabs.py: Add the line "(CourseTab.load('learning_analytics'),)"</li>
+<li>/lms/static/sass/_build-course.scss: Add the line with the import of learning analytics</li>
+<li>/lms/urls.py: Add the if with the comment, # Learning analytics module if is enabled </li>
+<li>/common/djangoapps/track/backends/django.py: Add the import timezone and the line tldat.time = timezone.now()</li>
 </ul>
 <br />
 Finally, you have to modify a file of configurartion because edX doesn't actually use the MySQL tracking backend:
@@ -69,14 +69,25 @@ Finally, you have to modify a file of configurartion because edX doesn't actuall
       } 
     },</i>
 <br />
-<br />
 You can add this code between the lines ' <i>"CREDIT_PROVIDER_SECRET_KEYS": {}, </i>' and ' <i>"DATABASES": { </i>' . 
 </li>
 </ul>
-
+<br />
+You have to migrate the tables of MySQL with:
+./manage.py lms makemigrations learning_analytics --settings=devstack_analytics
+./manage.py lms migrate learning_analytics --settings=devstack_analytics
+<br />
+If your new tab isn't showing up, try the following:
+sudo su edxapp
+pip install -e /edx/app/edxapp/edx-platform
+Moreover, if you want put the module in a course created before, you have that export the course and modify:
+policies/folder/policy.json, add: "name":"learning_analytics" and "type":"learning_analytics".
 <br />
 In order for the high level indicators to be calculated, we will not be doing it in real time as it would mean a lot of processing and extremely high amounts of data managing, and it would slow down the platform. We compute them using the Celery Beat scheduler, which starts task at regular intervals. We will use this tool so as to calculate every indicator in the module every 30 seconds. Celery Beat needs to be activated and configured so that it run the task which updates the indicators in background.
+<br />
+Note: If you install the module in mode of OpenedX Fullstack, you need install google-api-python-client.
 </ul>
+
 License
 -------
 
