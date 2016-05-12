@@ -29,7 +29,7 @@ For the installation of ANALYSE, you have two options:
 <ul>
 <li>Option 1: Use this full repository of Open edX which has the both the "hotfix-2016-03-17" release and ANALYSE module.</li>
 <br />
-<li>Option 2: Take ANALYSE code and insert it in a different Open edX release. The ANALYSE tool has been tested in the last two releases: Cypress and Dogwood. We have not tested it in other releases.</li>
+<li>Option 2: Take ANALYSE code and insert it in a different Open edX release. The ANALYSE tool has been tested in the last two releases: Cypress and Dogwood. We have not tested it in other releases and there is no warranty for the program.</li>
 
 <br />
 The functionality of ANALYSE has been added as a new django application. If you want to add ANALYSE in Open edX in your Open edX release, you have to add different files and folders of this repository:
@@ -120,6 +120,9 @@ Developed by
         </li>
         <li>
         Javier Santofimia Ruiz - Universidad Carlos III de Madrid (by implementing his Final Year Project)
+        </li>
+        <li>
+        Javier  Ignacio  Orcoyen  Chaves - Universidad Carlos III de Madrid (by implementing his Final Year Project)
         </li>
         <li>
         Carlos Delgado Kloos - Universidad Carlos III de Madrid
