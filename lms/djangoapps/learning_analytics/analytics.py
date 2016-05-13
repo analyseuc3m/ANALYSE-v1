@@ -366,9 +366,6 @@ def get_DB_sort_course_homework(course_key):
     
     # Graded sections
     for entry in gs_sql:
-        print 'GS_SQL'
-        print entry.category
-        print entry.num_fail,entry.num_pass,entry.num_prof
         sort_homework['graded_sections'].append({'category': entry.category, 'label': entry.label,
                                                  'name': entry.name, 'NOT': entry.num_not,
                                                  'FAIL': entry.num_fail,
@@ -578,14 +575,17 @@ def update_DB_student_grades(course_key):
     fail_std_grades = mean_student_grades(fail_std_grades, fail_count)
     
     # Get all grade_type
-    percent = all_std_grades['weight_subsections'][-1]['score']/all_std_grades['weight_subsections'][-1]['total']
-    if percent >= proficiency_limit:
-        all_grade_type = 'PROF'
-    elif percent >= pass_limit:
-        all_grade_type = 'OK'
+    if all_std_grades['weight_subsections'][-1]['total']!=0:
+        percent = all_std_grades['weight_subsections'][-1]['score']/all_std_grades['weight_subsections'][-1]['total']
+        if percent >= proficiency_limit:
+            all_grade_type = 'PROF'
+        elif percent >= pass_limit:
+            all_grade_type = 'OK'
+        else:
+            all_grade_type = 'FAIL'
     else:
-        all_grade_type = 'FAIL'
-    
+        all_grade_type='EMPTY'
+
     # Add groups to DB
     # All
     exists = StudentGrades.objects.filter(course_id=course_key, student_id=StudentGrades.ALL_STUDENTS)
@@ -734,16 +734,11 @@ def get_student_spent_time(course_key, student, time_chapters=None, course_block
                  'initial_time': None, 'last_time': None}
  
     events = get_new_events_sql(course_key, student, 'courseTime')
-    #print 'EVENTS'
-    #print events
     if events != None:
-        #print 'HAY EVENTOS'
         for event in events:
             if event.event_source == 'server':
-                #print 'server'
                 time_data, time_chapters = manage_server_event(time_data, time_chapters, event, course_blocks)
             elif event.event_source == 'browser':
-                #print 'browser'
                 time_data, time_chapters = manage_browser_event(time_data, time_chapters, event)   
             
         # Close in case user is still browsing
@@ -829,7 +824,6 @@ def activity_close(time_chapters, time_data, current_time, new_chapter=None, new
     if (time_data['last_time'] is None or
         time_data['initial_time'] is None or
         time_data['current_chapter'] is None):
-        #print 'Activity close EXCEPTION'
         return (time_data, time_chapters)
     
     # Add activity time
@@ -867,8 +861,6 @@ def activity_update(time_chapters, time_data, current_time):
     
     # Update activity
     elapsed_time = current_time - time_data['last_time']
-    #print 'UPDATE'
-    #print elapsed_time
     if (elapsed_time.days != 0 or 
         elapsed_time.seconds > INACTIVITY_TIME):
         # Inactivity
@@ -888,8 +880,6 @@ def activity_update(time_chapters, time_data, current_time):
     
 def add_course_time(chapter_key, sequential_key, time, time_chapters):
     time_spent = time.seconds + time.days * 3600 * 24
-    #print 'Spent_time'
-    #print time_spent
     for chapter_id in time_chapters.keys():
         if (CourseStruct.objects.filter(pk=chapter_id)[0] != None and
             compare_locations(CourseStruct.objects.filter(pk=chapter_id)[0].module_state_key, chapter_key)):
@@ -913,25 +903,14 @@ def add_time_chapter_time(original, new):
         # # TODO exception
         return
     for ch_id in original.keys():
-        #print 'CH_ID'
-        #print ch_id
         original[ch_id]['time_spent'] = original[ch_id]['time_spent'] + new[ch_id]['time_spent']
-        print 'ORIGINAL Y EL NEW'
-        print original[ch_id]['time_spent'],new[ch_id]['time_spent']
-        #print original[ch_id]['sequentials'].keys()
-        #print new[ch_id]['sequentials'].keys()
         if original[ch_id]['sequentials'].keys() != new[ch_id]['sequentials'].keys():
             # # TODO exception
-            #print 'EXCEPTION'
-            #return
             new= str(new)
             new = ast.literal_eval(new)
-        #print 'Siguen for'
         for seq_id in original[ch_id]['sequentials'].keys():
             original[ch_id]['sequentials'][seq_id]['time_spent'] = (original[ch_id]['sequentials'][seq_id]['time_spent'] + 
                                                                     new[ch_id]['sequentials'][seq_id]['time_spent'])
-            #print 'ORIGINAL Y EL NEW'
-            #print original[ch_id]['sequentials'][seq_id]['time_spent'],new[ch_id]['sequentials'][seq_id]['time_spent']
     return original
 
 ### Codigo Javier Orcoyen
@@ -963,16 +942,11 @@ def update_DB_course_spent_time(course_key):
         if not (staff_access or instructor_access):
             time_chapters_student = copy.deepcopy(time_chapters)
             #Dictionary with the new times
-            #print 'GET_student'
             time_chapters_student = get_student_spent_time(course_key,
                                                            student,
                                                            time_chapters_student,
                                                            course_blocks)
             #If there are new times
-            print 'Student'
-            print student
-            #print 'time_chapters_student tiene algo'
-            #print time_chapters_student
             if time_chapters_student != None:
                 newEvents = 1
 
@@ -1015,7 +989,6 @@ def update_DB_course_spent_time(course_key):
     
     # If there have been new events, add group all time chapters to database
     if newEvents == 1:
-        print 'newEvents'
         # Update database
         try:
             #Using get beceause there will only be one entry for all students of a curse
@@ -1040,7 +1013,7 @@ def update_DB_course_spent_time(course_key):
             coursetime_filter_all.save()
     
         if prof == 1:
-            print 'prof'
+
             # Add group prof time chapters to database
             try:
                 #Using get beceause there will only be one entry for all students of a curse graded with PROF
@@ -1064,7 +1037,7 @@ def update_DB_course_spent_time(course_key):
                 coursetime_filter_prof.save()
     
         if ok == 1:
-            print 'ok'
+
             # Add group ok time chapters to database
             try:
                 #Using get beceause there will only be one entry for all students of a curse graded with OK
@@ -1088,7 +1061,7 @@ def update_DB_course_spent_time(course_key):
                 coursetime_filter_pass.save()
     
         if fail == 1:
-            print 'fail'
+
             # Add group fail time chapters to database
             try:
                 #Using get beceause there will only be one entry for all students of a curse graded with FAIL
@@ -1324,8 +1297,6 @@ def update_DB_course_section_accesses(course_key):
                     original_accesses = ast.literal_eval(courseaccesses_filtered.accesses)
                     #Add the new accesses to the stored ones
                     total_course_accesses = add_student_accesses(original_accesses, course_accesses_student)
-                    #print 'Total_course_accesses'
-                    #print total_course_accesses
                     # Update entry
                     courseaccesses_filtered.accesses = total_course_accesses
                     courseaccesses_filtered.last_calc = timezone.now()
@@ -1590,7 +1561,7 @@ def get_student_problem_progress(course_key, student, course_struct=None, timeli
             problem_progress.append({'score':total, 'time': act_time})
         
     else:
-        print 'NO HAY PROGRESO DE PROBLEMAS'
+
         problem_progress = None
     return problem_progress
 
@@ -1703,12 +1674,10 @@ def update_DB_course_problem_progress(course_key, course_struct=None, timeline=N
     Update problem progress in database
     """
     newEvents = 0
-    print'Primer IF TIMELINE'
+
     if course_struct is None or timeline is None:
         course_struct, timeline = create_course_progress(course_key)
-    #print 'timeline'
-    #print timeline
-    print 'FIN PRIMER IF TIMELINE'   
+
     all_problem_progress = []
     prof_problem_progress = []
     ok_problem_progress = []
@@ -1733,7 +1702,7 @@ def update_DB_course_problem_progress(course_key, course_struct=None, timeline=N
         fail_problem_progress.append({'score':0, 'time':time})
         
     students = get_course_students(course_key)
-    #print 'students'
+
     for student in students:
         std_problem_progress = get_student_problem_progress(course_key,
                                                             student,
@@ -1741,8 +1710,6 @@ def update_DB_course_problem_progress(course_key, course_struct=None, timeline=N
                                                             timeline)
        
         #If there are new progresses
-        #print 'If there are new progresses'
-        #print std_problem_progress
         if std_problem_progress != None:
             
             newEvents = 1
@@ -2018,8 +1985,6 @@ def get_student_video_progress(course, student, timeline=None):
     video_progress = []
     
     (video_module_ids, video_durations) = get_info_videos(course)[1:3]
-    #print 'get_info_videos'
-    #print get_info_videos(course)[1:3]
     events = get_new_events_sql(course.location.course_key, student, 'videoProgress1')
    
     if events is not None:
@@ -2059,8 +2024,6 @@ def get_student_video_progress(course, student, timeline=None):
                 video_progress.append({'percent': last_percent, 
                                    'time': act_time})
     else:
-        print 'video_progress vacio con events= None'
-        print events
         video_progress = None     
     
     return video_progress
@@ -2123,13 +2086,11 @@ def add_video_progress(base, new):
 
 def optimize_video_progress(video_progress):
     time_len = len(video_progress)
-    #print 'time_len'
-    #print time_len
     if time_len == 1:
         return ([video_progress[0]['percent']], video_progress[0]['time'],
                 video_progress[0]['time'], 0)
     if time_len == 0:
-        print 'EXCEPTION'
+
         return ([0], None, None, 0)
     
     # Get start date
@@ -2140,7 +2101,6 @@ def optimize_video_progress(video_progress):
         start_index += 1
     
     if start_index == time_len:
-        print 'EXCEPTION start_index == time_len'
         return ([0], None, None, 0)
     
     # Get end date
@@ -2171,8 +2131,6 @@ def optimize_video_progress(video_progress):
     progress = []
     for i in range(start_index - 1, end_index):
         progress.append(video_progress[i]['percent'])
-    print 'progress'
-    print progress    
     return progress, start_date, end_date, delta
 
 
@@ -2251,15 +2209,9 @@ def update_DB_course_video_progress(course_key, timeline=None):
                 sql_filtered = CourseProbVidProgress.objects.get(course_id=course_key, student_id=student.id, type='VID')
                 
             except ObjectDoesNotExist:
-                print 'EXCEPTION sql_filtered = None'
+
                 sql_filtered = None
-            #print 'video progress'
-            #print std_video_progress
             progress, start_date, end_date, delta = optimize_video_progress(std_video_progress)
-            print 'start_date students'
-            print   start_date
-            print 'end_date students'
-            print end_date 
             # Create entry
             if (sql_filtered == None and start_date != None and end_date != None):
                 CourseProbVidProgress.objects.create(student_id=student.id, course_id=course_key, progress=progress, 
@@ -2267,13 +2219,12 @@ def update_DB_course_video_progress(course_key, timeline=None):
             else:
                 # Check for new events, but no new progress
                 if progress == [] or progress == [0]:
-                    print 'PROGRESS VACIO'
+
                     newEvents = 0
 
                 else:
                     # Get stored progress
-                    print 'sql_filtered.progress'
-                    print sql_filtered.progress
+
                     original_progress = ast.literal_eval(sql_filtered.progress)
                     start_date = sql_filtered.start_time
                 
@@ -2327,10 +2278,6 @@ def update_DB_course_video_progress(course_key, timeline=None):
             sql_filtered = None
 
         progress, start_date, end_date, delta = optimize_video_progress(all_video_progress)
-        print 'start_date newEvents'
-        print   start_date
-        print 'end_date newEvents'
-        print end_date 
         # Create entry
         if (sql_filtered == None and start_date != None and end_date != None):
             CourseProbVidProgress.objects.create(student_id=CourseProbVidProgress.ALL_STUDENTS,
@@ -2371,10 +2318,6 @@ def update_DB_course_video_progress(course_key, timeline=None):
                 sql_filtered = None
 
             progress, start_date, end_date, delta = optimize_video_progress(prof_video_progress)
-            print 'start_date prof'
-            print   start_date
-            print 'end_date prof'
-            print end_date
             # Create entry
             if (sql_filtered == None and start_date != None and end_date != None):
                 CourseProbVidProgress.objects.create(student_id=CourseProbVidProgress.PROF_GROUP,
@@ -2626,14 +2569,10 @@ def time_schedule(course_id):
                             firstEventOfSeries = previousEvent
                     else:
                         if((minutes_between(previousEvent.dtcreated,currentEvent.dtcreated) >= 30) or currentSchedule != current_schedule(currentEvent.dtcreated.hour)):
-                            print 'currentEvent'
-                            print currentEvent
                             if(currentSchedule == "morning"):
                                 morningTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
                             elif(currentSchedule == "afternoon"):
                                 afternoonTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
-                                print 'afternoonTimeStudent'
-                                print afternoonTimeStudent
                             elif(currentSchedule == "night"):
                                 nightTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
 
@@ -2645,8 +2584,6 @@ def time_schedule(course_id):
                     morningTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
                 elif(currentSchedule == "afternoon"):
                     afternoonTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
-                    print 'afternoonTimeStudent'
-                    print afternoonTimeStudent
                 elif(currentSchedule == "night"):
                     nightTimeStudent += minutes_between(firstEventOfSeries.dtcreated, previousEvent.dtcreated)
 
@@ -2671,11 +2608,8 @@ def time_schedule(course_id):
                     TimeSchedule.objects.create(student_id=student.id, course_id=course_id, time_schedule=timeSchedule)
                 else:
                     # Update entry
-                    print 'Update entry'
-                    print timeSchedule['afternoonTime']
-                    print afternoonTimeStudentCourse
                     studentTimeScheduleValue = ast.literal_eval(studentTimeSchedule.time_schedule)
-                    print studentTimeScheduleValue['afternoonTime']
+
                     totalTimeSchedule = {'morningTime' : studentTimeScheduleValue['morningTime']+timeSchedule['morningTime'],
                               'afternoonTime' : studentTimeScheduleValue['afternoonTime']+timeSchedule['afternoonTime'],
                               'nightTime' : studentTimeScheduleValue['nightTime']+timeSchedule['nightTime']}
@@ -2721,8 +2655,6 @@ def current_schedule(hour):
     hour: the hour of the time
     """ 
     currentSchedule = ""
-    print 'hour timeschedule'
-    print hour
     if( 6 < hour and hour < 14 ):
         currentSchedule = "morning"
     elif( 14 <= hour and hour < 21):
@@ -2739,8 +2671,7 @@ def get_DB_time_schedule(course_key, student_id=None):
     course_key: course id key
     student_id: if None, function will return all students
     """
-    print 'student_id get_DB_time_schedule'
-    print student_id
+
     student_time_schedule = {}
     if student_id is None:
         sql_time_schedule = TimeSchedule.objects.filter(course_id=course_key)
@@ -3215,9 +3146,7 @@ def update_DB_video_events(course_key=None):
                     kw_video_events['module_key'] = video_module_key
                     kw_video_events['display_name'] = video_names[video_module_keys.index(video_module_key)]
                     events_times = get_video_events_times(course_key, username_in, video_module_key)
-                    print 'EVENT TIMES'
-                    print events_times
-                    print username_in
+
                     if events_times is None:
                         continue
                     for event in VIDEO_EVENTS:
@@ -3230,10 +3159,7 @@ def update_DB_video_events(course_key=None):
                         change_speed_events = ast.literal_eval(new_entry.change_speed_events) + kw_video_events['change_speed_events']
                         seek_from_events = ast.literal_eval(new_entry.seek_from_events) + kw_video_events['seek_from_events']
                         seek_to_events = ast.literal_eval(new_entry.seek_to_events) + kw_video_events['seek_to_events']
-                        print 'play_events'
-                        print play_events
-                        print change_speed_events
-                        print seek_from_events
+
                         # Total values
                         new_entry.play_events = json.dumps(play_events)
                         new_entry.pause_events = json.dumps(pause_events)
@@ -4220,11 +4146,7 @@ def time_on_problem(course_key, student, problem_module_id, indicator):
     i = 0
     while i < len(event_pairs) - 1:        
         time_fraction = (event_pairs[i+1] - event_pairs[i]).total_seconds()
-        print 'EVENTOS'
-        print student
-        print event_pairs[i+1]
-        print event_pairs[i]
-        print time_fraction
+
         #TODO Bound time fraction to a reasonable value. Here 2 hours. What would be a reasonable maximum?
         time_fraction = 2*60*60 if time_fraction > 2*60*60 else time_fraction
         problem_time += time_fraction
@@ -4288,8 +4210,10 @@ def get_DB_infovideos():
     video_names=[]
     video_module_ids=[]
     video_durations=[]
+    import unicodedata
     for videoinfo in videosinfo:
-        video_names.append(str(videoinfo.video_name))
+        video_without_accent = unicodedata.normalize('NFKD', videoinfo.video_name).encode('ASCII', 'ignore')
+        video_names.append(str(video_without_accent))
         video_module_ids.append(videoinfo.video_module_ids)
         video_durations.append(float(videoinfo.video_duration))
 
@@ -4314,8 +4238,7 @@ def get_video_time_watched(username, course_id):
     for k,consumption_module in enumerate(consumption_modules):
 
         index = video_names.index(consumption_module.display_name)
-        #print 'index'
-        #print index
+
         module_names.append(consumption_module.display_name)               
         video_percentages[index]=consumption_module.percent_viewed
         if(username == '#average'):
@@ -4329,10 +4252,7 @@ def get_video_time_watched(username, course_id):
         total_video_percentages = [0]*len(video_names)
         
         indexes = [video_names.index(i) for i in module_names]
-        print 'indexes'
-        print indexes
-        print total_total_times
-        print total_times
+
         for i in indexes:
             total_total_times[i] = total_times[i]
             total_video_percentages[i] = video_percentages[i]

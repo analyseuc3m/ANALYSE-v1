@@ -28,9 +28,6 @@ function change_section(clicked_id) {
 		document.getElementById("div_exercise_visualizations").style.display = "";
 		// Reload of visualizations for correct resizing
 		LA_student_grades.drawChart();
-		
-		// Mirar como poner el condicional para que entre aqui 
-		
 		if ('${instructor_access}' == 'True' || '${staff_access}' == 'True')
 		{
 			LA_course_sort_students.drawChart();
@@ -71,6 +68,12 @@ function change_section(clicked_id) {
        //LA_vid_prob_prog.drawChart();
        LA_student_time_schedule.drawChart();
        }
+    else if(clicked_id == "a_about")
+       {
+       document.getElementById("a_about").className = "active-section";
+       document.getElementById("div_about").style.display = "";
+       }
+
 }
 
 function reset_elements()
@@ -78,10 +81,12 @@ function reset_elements()
 	   document.getElementById("a_exercise_visualizations").className = "";
 	   document.getElementById("a_video_visualizations").className = "";
 	   document.getElementById("a_course_activity_visualizations").className = "";
-	    
+	   document.getElementById("a_about").className = "";
+
 	   document.getElementById("div_exercise_visualizations").style.display = "none";
 	   document.getElementById("div_video_visualizations").style.display = "none";
-	   document.getElementById("div_course_activity_visualizations").style.display = "none";	   
+	   document.getElementById("div_course_activity_visualizations").style.display = "none";
+	   document.getElementById("div_about").style.display = "none";
 	}
 
 </script>
@@ -127,13 +132,14 @@ function reset_elements()
             % else:
             <h2>Dashboard for Students</h2>
             % endif
-            
+
 			<div class="instructor-dashboard-wrapper-2">
                 <section class="instructor-dashboard-content-2" id="learning-analytics-dashboard-content">
 				    <ul class="instructor-nav">
 				        <li class="nav-item"><a href="#" id="a_exercise_visualizations" onclick="change_section(this.id);">Problem visualizations</a></li>
 				        <li class="nav-item"><a href="#" id="a_video_visualizations" onclick="change_section(this.id);">Video visualizations</a></li>
 				        <li class="nav-item"><a href="#" id="a_course_activity_visualizations" onclick="change_section(this.id);">Course activity visualizations</a></li>
+						<li class="nav-item"><a href="#" id="a_about" onclick="change_section(this.id);">About</a></li>
 				    </ul>
 				</section>
 			</div>
@@ -159,7 +165,10 @@ function reset_elements()
 	                <%include file="daily_time_ex_vid.html" />	                	                                
 	                <%include file="course_accesses.html" />	                
 	                <%include file="chapter_time.html" />	         
-	                <%include file="students_time_schedule.html" />						
+	                <%include file="students_time_schedule.html" />
+	            </div>
+				<div id="div_about"   style="display: none;">
+	                <%include file="about.html" />
 	            </div>
 			</div>
 		</div>

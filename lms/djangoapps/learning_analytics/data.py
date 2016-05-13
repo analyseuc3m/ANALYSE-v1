@@ -51,9 +51,7 @@ def get_course_key(course_id):
     """
     Return course opaque key from olf course ID
     """
-    
-    #print 'ID'
-    #print course_id
+
     # Get course opaque key
     course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
     return course_key
@@ -105,7 +103,15 @@ def get_course_struct(course):
                             vert_struct = {'id': vertical.location,
                                                    'name': vertical.display_name_with_default,
                                                    'graded': vertical.graded,
+                                                   'components': [],
                                                    'released': released }
+                            
+                            # Components
+                            for component in vertical.get_children():
+                                comp_struct = {'id': component.location,
+                                           'name': component.display_name_with_default,
+                                           'showanswer':component.showanswer }
+                                vert_struct['components'].append(comp_struct)
                             seq_struct['verticals'].append(vert_struct)
                     chapter_struct['sequentials'].append(seq_struct)
             chapter_struct['graded'] = chapter_graded
@@ -372,9 +378,7 @@ def get_course_events_sql(course_key, student, limit_id):
         # Filter server events with course_id
         elif event.event_source == 'server':
             split_url = filter(None, event.event_type.split('/'))
-            #print 'split_sql'
-            #print split_url
-            #print event.event_type
+
             if len(split_url) != 0: 
                 if split_url[-1] == 'logout':
                     filter_id.append(event.id)
@@ -401,11 +405,6 @@ def get_course_access_events_sql(course_key, student, limit_id):
     # Filter events with course_key
     filter_id = []
     for event in events:
-        #print 'EVENTS EN GET_SQL_LOG'
-        #print event 
-        #print event.event_source
-        #print 'events'
-        #print event
         # Filter browser events with course_key
         if event.event_source == 'browser':
             if ((event.event_type == 'seq_prev' or 
@@ -444,8 +443,6 @@ def get_problem_history_sql(course_key, student, limit_id):
     filter_id = []
     
     for event in events:
-        #print 'events get_problem_history_sql'
-        #print event
         if is_problem_from_course(ast.literal_eval(event.event)['problem_id'], course_key):
             filter_id.append(event.id)
     
@@ -475,12 +472,8 @@ def is_same_course(course_1, course_2):
         course_1.__class__ == CourseLocator):
         course_1_key = course_1
     elif course_1.__class__ == str or course_1.__class__ == unicode:
-        #print 'COURSE 1'
-        #print course_1
-        course_1_key = get_course_from_url(course_1) #AQUI ES DONDE FALLAAA
-        #print course_1_key
+        course_1_key = get_course_from_url(course_1)
         if course_1_key == None:
-            #print 'FALSO NO SON IGUALES COURSE 1'
             return False
     else:
         # TODO: Check if is course module
@@ -490,19 +483,14 @@ def is_same_course(course_1, course_2):
         course_2.__class__ == CourseLocator):
         course_2_key = course_2
     elif course_2.__class__ == str or course_2.__class__ == unicode:
-        #print 'COURSE 2'
-        #print course_2
         course_2_key = get_course_from_url(course_2)
         if course_2_key == None:
-            print 'FALSO NO SON IGUALES COURSE 2'
             return False
     else:
-        print 'FALSEEE'
         # TODO: Check if is course module
         return False
     
     if course_1_key == course_2_key:
-        print 'TRUE'
         return True
     else:
         return False
@@ -517,34 +505,17 @@ def get_course_from_url(url):
     #split_url = filter(None, url.split(':')[2].split('+'))
     split_url = filter(None, url.split('/'))
     #split_url2 = filter(None, url.split(':')[2].split('+'))
-    #print 'SplitURL'
-    #print split_url
-    #print len(split_url)
     if len(split_url) < 3:
         # Wrong string
         return None
     elif len(split_url) == 3:
         # Old style course id
-        """if url.split('/')[2]=='course-v1:edx+CS112+2015_T3' or url.split('/')[2]=='course-v1:edX+DemoX+Demo_Course'or url.split('/')[2]=='course-v1:edx+CS111+2015_T6':
-            split_url = url.split('/')[2]
-            print 'URL_MOD'
-            print split_url
-            return get_course_key(split_url)#Codigo Gascon
-        else:"""
         split=split_url[1]
         split_url2 = filter(None, split.split('+'))
-        #print 'URL_MOD2'
-        #print split_url2
         if len(split_url2) == 3:
             #split_url = url.split('/')[2]
-            #print 'URL_MOD'
-            #print split_url2
-            #print 'valida'
-            #print split_url2
             return get_course_key(split)#Codigo Gascon
         else:
-            #print 'no valida'
-            #print split_url2
             return None
     else:
         # Search if course ID is contained in url
@@ -554,33 +525,16 @@ def get_course_from_url(url):
             if sect == 'courses':
                 break
         if len(split_url) > course_index + 2:
-            """print 'URL_sinMOD'
-            print split_url
-            if url.split('/')[2]=='course-v1:edx+CS112+2015_T3'or url.split('/')[2]=='course-v1:edX+DemoX+Demo_Course'or url.split('/')[2]=='course-v1:edx+CS111+2015_T6':
-                split_url = url.split('/')[2]
-                print 'URL_MOD'
-                print split_url
-                return get_course_key((split_url))
-            else:"""
-            
             split1=split_url[0]
             if split1 == 'courses':
                 split=split_url[1]
                 split_url2 = filter(None, split.split('+'))
-                #print 'URL_MOD2'
-                #print split_url2
             else:
                 split=split_url[3]
                 split_url2 = filter(None, split.split('+'))
-                #print 'URL_MOD2 y BROWSERRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR'
-                #print split_url2
             if len(split_url2) ==3:
-                #print 'valida'
-                #print split_url2
                 return get_course_key(split)#Codigo Gascon
             else:
-                #print 'no valida'
-                #print split_url2
                 return None
             #return get_course_key('/'.join(split_url[course_index:course_index + 3]))
         
@@ -596,26 +550,17 @@ def get_locations_from_url(url, course_blocks=None):
     """
     # Get route
     split_url = filter(None, url.split('/'))
-    #print 'SPLIT URL LOCATIONS'
-    #print split_url
     course_index = 0
     for sect in split_url:
         course_index += 1
         if sect == 'courses':
             break
     route = split_url[course_index:]
-    #print 'SplitURL'
-    #print split_url
-    #print 'route'
-    #print route
     if len(route) < 3:
         # No course in url
         return (None, None, None)
     else:
         course_key = get_course_key(route[0])#Codigo J. Antonio Gascon
-        #print 'course_key'
-        #print course_key
-        #print '1) VAMOS A VER QUE HAY EN LOS ROUTESSSSSS (get_locations_from_url)'
         
         if route[1] != 'courseware':
             # No sequential or chapter
@@ -627,10 +572,8 @@ def get_locations_from_url(url, course_blocks=None):
                 if course_blocks.has_key(xblock_id):
                     return (course_key, course_blocks[xblock_id]['chapter'], course_blocks[xblock_id]['sequential'])
                 else:
-                    #print "falla xblock_id"
                     return (course_key, None, None)
             else:
-                #print "nada coincide con xblock"
                 return (course_key, None, None)
         elif len(route) == 3:
             # Only chapter
@@ -638,17 +581,11 @@ def get_locations_from_url(url, course_blocks=None):
             return (course_key, chapter_key, None)
         else:
             split_comp= filter(None,route[3].split('-'))
-            #print 'SPLIT COMP'
-            #print split_comp
-            #print len(split_comp)
             if len(split_comp)>1:
             # Chapter and sequential
-                print 'CHILD'
-                #print route[3]
                 chapter_key = course_key.make_usage_key('chapter', route[2])
                 return (course_key, chapter_key, None)
             else:
-                print 'DENTRO COURSES'
                 chapter_key = course_key.make_usage_key('chapter', route[2])
                 sequential_key = course_key.make_usage_key('sequential', route[3])
                 return (course_key, chapter_key, sequential_key)
@@ -705,6 +642,49 @@ def compare_locations(loc1, loc2, course_key=None):
         
     return lockey1.to_deprecated_string() == lockey2.to_deprecated_string()
 
+##############################################################################
+########################### Jaime Alzola #####################################
+##############################################################################
+def get_sequential_grading_inforamtion(course,sequential_id,info_type):
+    """
+    Returns the grading category or the short label of the grading category
+    of a sequential. The sequential is identified by the sequential_id and the
+    information we want to obtain by the info_type variable
+    """
+    return_data=None
+    gcontext = course.grading_context['graded_sections']
+    #print course.grader.sections
+
+    for subgrader, category, weight in course.grader.sections:
+        for index in range(0,len(gcontext[category])):
+            if gcontext[category][index]['section_descriptor'].location.name == sequential_id:
+                if info_type == 'category':
+                    return_data = category
+                elif info_type == 'short_label':
+                    return_data = subgrader.short_label
+                break
+        if return_data != None:
+            break
+    return return_data           
+    
+def get_grading_subsections_index(course):
+    return_data={}
+    for subgrader, category, weight in course.grader.sections:
+        return_data.update({category:0})
+    return return_data
+
+def get_grading_subsections_problems_effectiveness(course):
+    """
+    Returns the grading structure to be used in calculating the
+    effectiveness. For each grading subsection the accessed, ok, proficiecny and
+    the total amount of exercises will be accumulated, along with the weighting
+    of the grading subsction
+    """
+    return_data={}
+    for subgrader, category, weight in course.grader.sections:
+        return_data.update({category:{'accessed':0,'ok':0,'proficiency':0,'total':0,'weight':weight}})
+    return return_data
+
 """
 # OLD FUNCTION WITH API V2 Retrieve video-length via Youtube given its ID
 def id_to_length(youtube_id):
@@ -738,10 +718,6 @@ def id_to_length(youtube_id):
       part="contentDetails",
       maxResults=1
     ).execute()
-    #print 'SEARCH RESPONSE'
-    #print search_response
-    
-    
     #self.api_key = configuration.get_config().get('google', 'api_key', None)
     #duration = -1
     """if self.api_key is None:
@@ -751,41 +727,11 @@ def id_to_length(youtube_id):
     
     #Codigo Jose A. Gascon
     video_duration = search_response['items'][0]["contentDetails"]["duration"]
-    
-    """try:
-        video_url = "https://www.googleapis.com/youtube/v3/videos?id={0}&part=contentDetails&key={1}".format(
-                    youtube_id)
-        video_file = urllib.urlopen(video_url)
-        content = json.load(video_file)
-        items = content.get('items', [])
-        
-        if len(items) > 0:
-            duration_str = items[0].get(
-                'contentDetails', {'duration': 'MISSING_CONTENTDETAILS'}
-            ).get('duration', 'MISSING_DURATION')
-            matcher = re.match(r'PT(?:(?P<hours>\d+)H)?(?:(?P<minutes>\d+)M)?(?:(?P<seconds>\d+)S)?', duration_str)
-            if not matcher:
-                log.error('Unable to parse duration returned for video %s: %s', youtube_id, duration_str)
-            else:
-                duration_secs = int(matcher.group('hours') or 0) * 3600
-                duration_secs += int(matcher.group('minutes') or 0) * 60
-                duration_secs += int(matcher.group('seconds') or 0)
-                duration = duration_secs
-        else:
-            log.error('Unable to find items in response to duration request for youtube video: %s', youtube_id)
-    except Exception:  # pylint: disable=broad-except
-        log.exception("Unrecognized response from Youtube API")
-    finally:
-        if video_file is not None:
-            video_file.close()        
-    return duration
-    #print(video_duration)
-    #print("\n\n\n")
-    """
+
     duration_iso_8601 = ''
-    
+
     m = re.match('PT((?P<hours>[0-9]{1,2})H)?((?P<minutes>[0-9]{1,2})M)?((?P<seconds>[0-9]{1,2})S)?', video_duration)
-    
+
     #m = re.match('PT((?P<hours>[0-9]{1,2})H)?((?P<minutes>[0-9]{1,2})M)?((?P<seconds>[0-9]{1,2})S)?',)
     hours = int(m.group('hours')) if m.group('hours') is not None else 0
     minutes = int(m.group('minutes')) if m.group('minutes') is not None else 0
@@ -811,14 +757,9 @@ def get_info_videos(course):
         #youtube_ids.append(video_descriptor.__dict__['_field_data_cache']['youtube_id_1_0'].encode('utf-8'))
         video_module_ids.append(video_descriptor.location)
         context = VideoDescriptor.get_context(video_descriptor)
-        print 'context'
-        #print context.type
-        #print context
-        #print context['transcripts_basic_tab_metadata']['video_url']['value']
         url=str(context['transcripts_basic_tab_metadata']['video_url']['value'])
         you_tubeid= url.split('/')[-1]
         you_tubeid=you_tubeid.replace("']","")
-        print you_tubeid
         youtube_ids.append(you_tubeid)
     
     for youtube_id in youtube_ids:
@@ -843,46 +784,19 @@ def get_info_videos_descriptors(video_descriptors):
 
     #Codigo Jose A. Gascon
     for video_descriptor in video_descriptors:
-        #print 'video_FIELDS'
-        #print video_descriptor.location
-        #print 'video_descriptor'
-        #print video_descriptor.__dict__['scope_ids']
         video_names.append(video_descriptor.display_name_with_default.encode('utf-8'))
-        #print video_descriptor.__dict__['fields'].encode('utf-8')
+        #
         #youtube_ids.append(video_descriptor.__dict__['_field_data_cache']['youtube_id_1_0'].encode('utf-8'))
         video_module_ids.append(video_descriptor.location)
         context = VideoDescriptor.get_context(video_descriptor)
-        #print 'context'
-        #print context.type
-        #print context
-        #print context['transcripts_basic_tab_metadata']['video_url']['value']
         url=str(context['transcripts_basic_tab_metadata']['video_url']['value'])
         you_tubeid= url.split('/')[-1]
         you_tubeid=you_tubeid.replace("']","")
-        #print you_tubeid
+
         youtube_ids.append(you_tubeid)
-    print 'video_names'
-    print video_names
-    
-    """POR SI ALGUNA VEZ HAY QUE CONECTARSE A MONGO
-    from pymongo import MongoClient
-    import sys
-    # establish a connection to the database
-    connection = MongoClient('mongodb://localhost:27017/')
-    db = connection['edxapp']
-    collection = db['modulestore.structures']
-    #db=connection.edxapp
-    #collection=db.modulestore.definitions
-    #query=ObjectId("5652e10656c02c111a5cca6e")
-    objeto=collection.find()
-    print 'OBJETO'
-    print objeto
-    for item in collection.find({ "blocks.block_type" : "video" },{"fields":true,"youtube_id_1_0":true}):
-        print item
-    """
+
     #print "Videos:\n", "\n".join(youtube_ids), "\n"
     for youtube_id in youtube_ids:
-        #print youtube_id
         video_durations.append(float(id_to_length(youtube_id))) #float useful for video_percentages to avoid precision loss
     for k in range(len(video_names)):
         try:
@@ -957,14 +871,9 @@ def get_problem_intervals(student, problem_module_id, limit_id):
     ]
     
     iter_problem_module_id = to_iterable_module_id(problem_module_id)
-    #print 'problem_module_id'
-    #print problem_module_id
+
     str1 = ';_'.join(x for x in iter_problem_module_id if x is not None)
     str2= str1.split('_')[-1]
-    #print 'str1'
-    #print str1
-    #print 'str2'
-    #print str2
     #org = problem_id.split('+')[0].split(':')[1]
     #str1=str5
     # str1 = ''.join([problem_module_id.DEPRECATED_TAG,':;_;_',str1]) 
@@ -972,16 +881,9 @@ def get_problem_intervals(student, problem_module_id, limit_id):
     cond1 = Q(event_type__in=INVOLVED_EVENTS)
     cond2 = Q(event_type__contains = str2) & Q(event_type__contains = 'problem_get')
     shorlist_criteria = Q(username=student) & (cond1 | cond2)
-    """print'shortlist'
-    print shorlist_criteria
-    print limit_id"""
     events = TrackingLog.objects.filter(shorlist_criteria, id__gt=limit_id)
-    #print 'events in get_problem_intervals ANTES'
-    #print events
     if events.filter(event_type__in=INVOLVED_EVENTS).count() <= 0:
         events = []
-    #print 'events in get_problem_intervals'
-    #print events
     return events
 
 
@@ -1000,8 +902,6 @@ def get_video_events(student, video_module_id, limit_id):
     shorlist_criteria = Q(username=student) & cond1
     
     events = TrackingLog.objects.filter(shorlist_criteria, id__gt=limit_id)
-    #print 'events get_video_events'
-    #print events
     return events
 
 
@@ -1013,19 +913,15 @@ def get_video_intervals(student, video_module_id, last_date, limit_id):
         'seek_video',
     ]
     str1=video_module_id.to_deprecated_string().replace('/',';_')
-    print 'str1'
-    print str1
+
     #shortlist criteria
     cond1   = Q(event_type__in=INVOLVED_EVENTS, event__contains=video_module_id.html_id())
     cond2_1 = Q(event_type__contains = video_module_id.to_deprecated_string().replace('/',';_'))
     cond2_2 = Q(event_type__contains='save_user_state', event__contains='saved_video_position')
     shorlist_criteria = Q(username=student) & (cond1 | (cond2_1 & cond2_2))
-    #print'shortlist'
-    #print shorlist_criteria
+
     #Search for events in the track_trackinglog table with and id greater than limit_id (if limit_id=0, it will take all events)
     events = TrackingLog.objects.filter(shorlist_criteria, id__gt=limit_id).order_by('time')
-    #print 'events get_video_intervals'
-    #print events
     if last_date is not None:
         events = events.filter(dtcreated__lte = last_date)
  
@@ -1217,9 +1113,6 @@ def get_all_events_sql(course_key, student, limit_id):
         # Filter browser events with course_key
         if (event.event_source == 'browser'):
             if (is_same_course(event.page, course_key)):#Codigo Gascon
-                #print 'browser'
-                #print 'event_id1'
-                #print event.id
                 filter_id.append(event.id)        
         # Filter server events with course_id
         elif event.event_source == 'server':
@@ -1231,8 +1124,7 @@ def get_all_events_sql(course_key, student, limit_id):
                     #print event_type
                     #print course_key
                     if (is_same_course(event.event_type, course_key)):#Codigo Gascon
-                        #print 'event_id1'
-                        #print event.id
+
                         filter_id.append(event.id)
         
                                 
@@ -1302,22 +1194,20 @@ def get_new_events_sql(course_key, student, indicator):
 
 ### Codigo Javier Orcoyen
 def get_new_module_events_sql(course_key, student, module_key, indicator, last_date):
-    
-    #print 'indicators'
-    #print indicator
+
     lastKnownEventRegistered=0    
     
     #Check for the last known event of a student (student) for a certain course (course_key) in the LastKnownTrackingLog database
     try:   
         #Using get beceause there will only be one entry for each student and each course
-        #print 'TRY LASTEVENT'
+
         lastKnownEvent = LastKnownTrackingLog.objects.get(username=student, course_key=course_key, module_key=module_key, indicator=indicator)
     except ObjectDoesNotExist:
         lastKnownEvent = None
     
     #Check if there is not a last known event (first time it wont be) 
     if lastKnownEvent == None:
-        #print 'EXCEPTION LASTEVENT'
+
         #Take all course events of that student from the TrackingLog database as new events, no limit id 
         limitId = 0
 
@@ -1357,16 +1247,11 @@ def get_new_module_events_sql(course_key, student, module_key, indicator, last_d
 
     else:
         events = None
-    
-    #print "EVENTS IN GETMODULE"
-    #print events
+
     return events
 
  
 def minutes_between(d1, d2):
-    print 'tiempos'
-    print d1
-    print d2
     elapsed_time = d2 - d1
     return (elapsed_time.days * 86400 + elapsed_time.seconds)/60  
 
@@ -1676,11 +1561,7 @@ def videos_problems_in(course_descriptor):
                                 if content.location.category in MODULES_TO_FIND:
                                     video_problem_list[MODULES_TO_FIND.index(content.location.category)].append(content)
                                    
-    
-    #print 'LISTA ENTERA DE VIDEOS'
-    #print video_problem_list[0]
-    #print 'CONTENT doc'
-    #print video_problem_list[0].__name__
+
     return video_problem_list
 
 
@@ -1758,10 +1639,7 @@ def join_video_problem_time(video_days, video_daily_time, problem_days, problem_
 
     
 def to_iterable_module_id(block_usage_locator):
-    #print 'block_usage_locator'
-    #print block_usage_locator
-    #print block_usage_locator.branch
-    #print block_usage_locator.version_guid
+
     iterable_module_id = []
     iterable_module_id.append(block_usage_locator.org)
     iterable_module_id.append(block_usage_locator.course)
