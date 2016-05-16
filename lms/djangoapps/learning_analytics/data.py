@@ -775,7 +775,7 @@ def get_info_videos(course):
 
 # Returns info of videos in course.
 # Specifically returns their names, durations and module_ids
-def get_info_videos_descriptors(video_descriptors):
+def get_info_videos_descriptors(video_descriptors,course):
   
     video_names = []
     youtube_ids = []
@@ -801,9 +801,9 @@ def get_info_videos_descriptors(video_descriptors):
     for k in range(len(video_names)):
         try:
             # Using get beceause there will only be one entry for each student and each course
-            CourseVideos.objects.get(video_name=video_names[k], video_module_ids=video_module_ids[k],video_duration=video_durations[k])
+            CourseVideos.objects.get(video_name=video_names[k], video_module_ids=video_module_ids[k],video_duration=video_durations[k],course_key=course)
         except ObjectDoesNotExist:
-            CourseVideos.objects.create(video_name=video_names[k], video_module_ids=video_module_ids[k],  video_duration=video_durations[k])
+            CourseVideos.objects.create(video_name=video_names[k], video_module_ids=video_module_ids[k],  video_duration=video_durations[k],course_key=course)
     return video_names, video_module_ids, video_durations
 
 # Given a course_descriptor returns a list of the videos in the course

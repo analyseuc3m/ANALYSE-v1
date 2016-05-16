@@ -2740,7 +2740,7 @@ def update_DB_daily_time_prob_and_vids(course_key=None):
         course = get_course_by_id(course_key, depth=None)
         usernames_in = [x.username.encode('utf-8') for x in CourseEnrollment.objects.users_enrolled_in(course_key)]#Codigo J.A. Gascon
         videos_in, problems_in = videos_problems_in(course)
-        video_names, video_module_keys, video_durations = get_info_videos_descriptors(videos_in)
+        video_names, video_module_keys, video_durations = get_info_videos_descriptors(videos_in,course_key)
         problem_names = [x.display_name_with_default.encode('utf-8') for x in problems_in]
         problem_ids = [x.location for x in problems_in]
         students = get_course_students(course_key)
@@ -3013,7 +3013,7 @@ def update_DB_video_time_distribution(course_key=None):
         course = get_course_by_id(course_key, depth=None)
         usernames_in = [x.username.encode('utf-8') for x in CourseEnrollment.objects.users_enrolled_in(course_key)]#Codigo J.A.Gascon
         videos_in = videos_problems_in(course)[0]
-        video_names, video_module_keys, video_durations = get_info_videos_descriptors(videos_in)
+        video_names, video_module_keys, video_durations = get_DB_infovideos(course_key)
         # List of UserVideoIntervals
         users_video_intervals = []
         users_with_video_events = []
@@ -3132,7 +3132,7 @@ def update_DB_video_events(course_key=None):
         course = get_course_by_id(course_key, depth=None)
         usernames_in = [x.username.encode('utf-8') for x in CourseEnrollment.objects.users_enrolled_in(course_key)]#Codigo J.A.Gascon
         videos_in = videos_problems_in(course)[0]
-        video_names, video_module_keys, video_durations = get_info_videos_descriptors(videos_in)
+        video_names, video_module_keys, video_durations = get_DB_infovideos(course_key)
         students = get_course_students(course_key)
         # VideoEvents table data
         VIDEO_EVENTS = ['play', 'pause', 'change_speed', 'seek_from', 'seek_to']
@@ -3445,7 +3445,7 @@ def update_DB_repetition_video_intervals(course_key=None):
         usernames_in = [x.username.encode('utf-8') for x in CourseEnrollment.objects.users_enrolled_in(course_key)]#Codigo J.A.Gascon
         ids_in = [x.id for x in CourseEnrollment.objects.users_enrolled_in(course_key)]#Codigo J.A.Gascon
         videos_in = videos_problems_in(course)[0]
-        video_names, video_module_keys, video_durations = get_info_videos_descriptors(videos_in)
+        video_names, video_module_keys, video_durations = get_DB_infovideos(course_key)
         students = get_course_students(course_key)
         # List of UserVideoIntervals
         users_video_intervals = []
@@ -3839,7 +3839,7 @@ def update_DB_video_time_watched(course_key=None):
         course = get_course_by_id(course_key, depth=None)
         usernames_in = [x.username.encode('utf-8') for x in CourseEnrollment.objects.users_enrolled_in(course_key)]#Codigo J.A.Gascon
         videos_in = videos_problems_in(course)[0]
-        video_names, video_module_keys, video_durations = get_info_videos_descriptors(videos_in)
+        video_names, video_module_keys, video_durations = get_DB_infovideos(course_key)
         # List of UserVideoIntervals
         users_video_intervals = []
         users_with_video_events = []
@@ -4205,8 +4205,18 @@ def get_module_consumption(username, course_id, module_type):
 
     return module_names, total_times
 
-def get_DB_infovideos():
-    videosinfo=CourseVideos.objects.all()
+def get_DB_infovideos(course_key=None):
+    #videosinfo=CourseVideos.objects.all()
+    try:
+        videosinfo = CourseVideos.objects.filter(course_key=course_key)
+        print 'videosinfo'
+        print videosinfo
+    except ObjectDoesNotExist:
+        print 'EXCEPTIONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN'
+
+
+    #videosinfo = CourseVideos.objects.all()
+
     video_names=[]
     video_module_ids=[]
     video_durations=[]
@@ -4226,7 +4236,7 @@ def get_video_time_watched(username, course_id):
     course = get_course_by_id(course_id, depth=None)
     videos_in = videos_problems_in(course)[0]
     #video_names = get_info_videos_descriptors(videos_in)[0]
-    video_names= get_DB_infovideos()[0]
+    video_names= get_DB_infovideos(course_id)[0]
     #shortlist criteria
     shortlist = Q(student=username, course_key=course_id)
     consumption_modules = VideoTimeWatched.objects.filter(shortlist)

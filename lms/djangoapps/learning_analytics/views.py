@@ -92,7 +92,6 @@ def index(request, course_id):
     studio_url = get_studio_url(course, 'course_info')
     
     #reverifications = fetch_reverify_banner_info(request, course_key)
-    
     #course = get_course_with_access(request.user, action='load', course_key=course_key, depth=None, check_if_enrolled=False)
     #user = User.objects.get(request.user.email)
     # Proficiency and pass limit
@@ -113,7 +112,7 @@ def index(request, course_id):
     #WARNINIG 
     #video_durations = get_info_videos_descriptors(video_descriptors)[2]
     #video_names, video_module_keys, video_durations = get_info_videos_descriptors(video_descriptors) # NO SE USAN LAS OTRAS VARIABLES
-    video_names, video_module_keys, video_durations =get_DB_infovideos()
+    video_names, video_module_keys, video_durations =get_DB_infovideos(course_key)
     video_names_sorted = video_names
     video_ids_sort = video_names_sorted
 
@@ -181,6 +180,7 @@ def index(request, course_id):
     orden=[]
     orden.append(i for i, x in enumerate(problem_names_sorted))
     problem_ids_str=problem_names_sorted
+    user_val=1
     # Daily time spent on video and/or problem resources
     video_days, video_daily_time = get_daily_consumption(user_for_charts, course_key, 'video')
     problem_days, problem_daily_time = get_daily_consumption(user_for_charts, course_key, 'problem')    
@@ -263,7 +263,8 @@ def index(request, course_id):
                'morning_time' : morning_time,
                'afternoon_time' : afternoon_time,
                'night_time' : night_time,
-               'names_students' : names_students,}
+               'names_students' : names_students,
+               'user_val' : user_val,}
         
     return render_to_response('learning_analytics/learning_analytics.html', context)    
 
@@ -303,7 +304,7 @@ def chart_update(request):
             course = get_course_with_access(user_id, action='load', course_key=course_key, depth=None, check_if_enrolled=False)         
             #video_descriptors = videos_problems_in(course)[0]
             #video_durations = get_info_videos_descriptors(video_descriptors)[2]
-            video_durations = get_DB_infovideos()[2]
+            video_durations = get_DB_infovideos(course_key)[2]
             # Codigo Javier Orcoyen
             video_names, avg_video_time, video_percentages = get_video_time_watched(user_id, course_key)
             if avg_video_time != []:

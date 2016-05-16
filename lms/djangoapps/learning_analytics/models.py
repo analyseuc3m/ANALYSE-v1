@@ -385,8 +385,9 @@ class LastKnownTrackingLog(models.Model):
 #Related to the information of the videos in the courses
 class CourseVideos(models.Model):
     video_name = models.CharField(max_length=255)
-    video_module_ids=models.CharField(max_length=255)
+    video_module_ids=LocationKeyField(max_length=255, db_index=True)
     video_duration=models.TextField(db_index=False)
+    course_key = CourseKeyField(max_length=255, db_index=True, null=True)
 
     class Meta:
         app_label = 'learning_analytics'
