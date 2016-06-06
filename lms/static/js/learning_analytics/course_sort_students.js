@@ -27,31 +27,39 @@ var LA_course_sort_students = (function(){
 		if (data == null){
 			// Parse JSON
 			all_sections = JSON.parse(SORT_STD_DUMP.replace(/&quot;/ig,'"'));
-			wss = all_sections['weight_subsections'];
-			gs = all_sections['graded_sections'];
-			
-			// Make data array
-			wss_array = [['Category','Not Done','Fail','Pass','Proficiency'],];
-			for(var i = 0; i < wss.length; i++){
-				var total = wss[i]['NOT'] + wss[i]['FAIL'] + wss[i]['OK'] + wss[i]['PROFICIENCY'];
-				wss_array.push([wss[i]['category'],
-					(wss[i]['NOT']/total)*100,
-					(wss[i]['FAIL']/total)*100,
-					(wss[i]['OK']/total)*100,
-					(wss[i]['PROFICIENCY']/total)*100]
-				);
-			}
-		
-			// Data
-			data = wss_array;
-			// Options
-	    	options = {
-				colors: [COLOR_NOT, COLOR_FAIL, COLOR_OK, COLOR_PROF],
-				legend: {position: 'none'},
-				isStacked: true,
-	    	};
-	    	
-	    	document.getElementById('legend_title').innerHTML = DEF_TITLE;
+			if(all_sections['weight_subsections'].length == 0){
+			    var node = document.createTextNode("No data to display.");
+			    var noData = document.createElement("p");
+			    noData.appendChild(node);
+			    document.getElementById('chart_course_sort_students').innerHTML = "";
+			    document.getElementById('chart_course_sort_students').appendChild(noData);
+			}else{
+                wss = all_sections['weight_subsections'];
+                gs = all_sections['graded_sections'];
+
+                // Make data array
+                wss_array = [['Category','Not Done','Fail','Pass','Proficiency'],];
+                for(var i = 0; i < wss.length; i++){
+                    var total = wss[i]['NOT'] + wss[i]['FAIL'] + wss[i]['OK'] + wss[i]['PROFICIENCY'];
+                    wss_array.push([wss[i]['category'],
+                        (wss[i]['NOT']/total)*100,
+                        (wss[i]['FAIL']/total)*100,
+                        (wss[i]['OK']/total)*100,
+                        (wss[i]['PROFICIENCY']/total)*100]
+                    );
+                }
+
+                // Data
+                data = wss_array;
+                // Options
+                options = {
+                    colors: [COLOR_NOT, COLOR_FAIL, COLOR_OK, COLOR_PROF],
+                    legend: {position: 'none'},
+                    isStacked: true,
+                };
+
+                document.getElementById('legend_title').innerHTML = DEF_TITLE;
+	    	}
 		}
 		// Make DataTable
 	    var dt = google.visualization.arrayToDataTable(data);

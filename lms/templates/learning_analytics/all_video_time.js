@@ -19,7 +19,7 @@ function drawChart2(json_data) {
   // Instantiate and draw our chart, passing in some options.
   var chart = new google.visualization.BarChart(document.getElementById('all_video_time'));
   
-  if (json_data != null && json_data.length > 0) {
+  if (json_data != null && json_data.length > 1) {
 
     var vectorValues = [];
     var vectorNames =[];
@@ -98,7 +98,7 @@ function drawChart2_2(json_data) {
   // Instantiate and draw our chart, passing in some options.
   var chart = new google.visualization.BarChart(document.getElementById('all_video_time'));
 
-  if (json_data != null && json_data.length > 0) {
+  if (json_data != null && json_data.length > 1) {
 
 
     // Create the data table.

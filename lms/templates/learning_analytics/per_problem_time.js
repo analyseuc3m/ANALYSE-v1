@@ -18,9 +18,9 @@ function drawChart3(json_data) {
 
   // Instantiate and draw our chart, passing in some options.
   var chart = new google.visualization.BarChart(document.getElementById('per_problem_time'));
-  if (json_data != null && json_data.length > 0) {
+  if (json_data != null && json_data.length > 1) {
     
-	  
+
     var vectorValues = [];
     var vectorNames =[];
     var sumvalues =0;
@@ -88,7 +88,7 @@ function drawChart3(json_data) {
     document.getElementById('per_problem_time').innerHTML = "";
     document.getElementById('per_problem_time').appendChild(noData);
     
-  }    
+  }
   
 }
 
@@ -96,7 +96,7 @@ function drawChart3_2(json_data) {
 
   // Instantiate and draw our chart, passing in some options.
   var chart = new google.visualization.BarChart(document.getElementById('per_problem_time'));
-  if (json_data != null && json_data.length > 0) {
+  if (json_data != null && json_data.length > 1) {
 
     // Create the data table.
     var data = new google.visualization.arrayToDataTable(json_data);

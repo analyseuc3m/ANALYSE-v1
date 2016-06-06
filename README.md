@@ -96,7 +96,7 @@ policies/folder/policy.json, add: "name":"learning_analytics" and "type":"learni
 In order for the high level indicators to be calculated, we will not be doing it in real time as it would mean a lot of processing and extremely high amounts of data managing, and it would slow down the platform. We compute them using the Celery Beat scheduler, which starts task at regular intervals. We will use this tool so as to calculate every indicator in the module every 30 seconds. Celery Beat needs to be activated and configured so that it run the task which updates the indicators in background.
 <br />
 <br />
-Note: If you install the module in mode of OpenedX Fullstack, you need install google-api-python-client.
+Note: If you install the module in mode of OpenedX Fullstack, you need install google-api-python-client and add the content of devstack_analytics.py in aws.py, in the end.
 </ul>
 
 License

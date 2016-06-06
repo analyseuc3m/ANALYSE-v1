@@ -77,7 +77,7 @@ function rangevideos2(){
 
     var chart_number = 8;
     localStorage.setItem('chart_number',JSON.stringify(chart_number));
-	var limitvideos=6; // limit of videos to select
+	var limitvideos=8; // limit of videos to select
 	// if you select a range of videos valid
 	if (opts.length<=limitvideos){
 		var jsonN = new Array ();
@@ -98,7 +98,7 @@ function rangevideos2(){
 		}
 	    reDrawChart(chart_number, jsonN);
 	}else{
-		alert("The maximum selection of videos is six");
+		alert("The maximum selection of videos is eight");
 	}
 
 }

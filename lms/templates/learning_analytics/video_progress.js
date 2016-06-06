@@ -23,7 +23,7 @@ function drawChart1(json_data) {
   // Instantiate and draw our chart, passing in some options.
   var chart = new google.visualization.BarChart(document.getElementById('video_prog_chart'));
   
-  if (json_data != null && json_data.length > 0) {
+  if (json_data != null && json_data.length > 1) {
     
     // Create the data table.
 	var longitud= json_data.length;
