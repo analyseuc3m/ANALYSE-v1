@@ -789,21 +789,27 @@ def get_info_videos_descriptors(video_descriptors,course):
         #youtube_ids.append(video_descriptor.__dict__['_field_data_cache']['youtube_id_1_0'].encode('utf-8'))
         video_module_ids.append(video_descriptor.location)
         context = VideoDescriptor.get_context(video_descriptor)
-        url=str(context['transcripts_basic_tab_metadata']['video_url']['value'])
-        you_tubeid= url.split('/')[-1]
-        you_tubeid=you_tubeid.replace("']","")
-
-        youtube_ids.append(you_tubeid)
-
-    #print "Videos:\n", "\n".join(youtube_ids), "\n"
-    for youtube_id in youtube_ids:
-        video_durations.append(float(id_to_length(youtube_id))) #float useful for video_percentages to avoid precision loss
-    for k in range(len(video_names)):
-        try:
-            # Using get beceause there will only be one entry for each student and each course
-            CourseVideos.objects.get(video_name=video_names[k], video_module_ids=video_module_ids[k],video_duration=video_durations[k],course_key=course)
-        except ObjectDoesNotExist:
-            CourseVideos.objects.create(video_name=video_names[k], video_module_ids=video_module_ids[k],  video_duration=video_durations[k],course_key=course)
+        # url=str(context['transcripts_basic_tab_metadata']['video_url']['value'])
+        url = context['transcripts_basic_tab_metadata']['video_url']['value'][0]
+        # AQUI HAY QUE FILTRAR LA ID DE YOUTUBE
+        you_tubeid = url.split('/')[-1]
+        you_tubeid = you_tubeid.replace("']", "")
+        url_filt = you_tubeid.split('.')[-1]
+        if not url_filt == 'mp4' or url_filt == 'webm':
+            youtube_ids.append(you_tubeid)
+    if len(youtube_ids) > 0:
+        # print "Videos:\n", "\n".join(youtube_ids), "\n"
+        for youtube_id in youtube_ids:
+            video_durations.append(
+                float(id_to_length(youtube_id)))  # float useful for video_percentages to avoid precision loss
+        for k in range(len(video_names)):
+            try:
+                # Using get beceause there will only be one entry for each student and each course
+                CourseVideos.objects.get(video_name=video_names[k], video_module_ids=video_module_ids[k],
+                                         video_duration=video_durations[k], course_key=course)
+            except ObjectDoesNotExist:
+                CourseVideos.objects.create(video_name=video_names[k], video_module_ids=video_module_ids[k],
+                                            video_duration=video_durations[k], course_key=course)
     return video_names, video_module_ids, video_durations
 
 # Given a course_descriptor returns a list of the videos in the course

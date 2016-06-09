@@ -10,7 +10,7 @@ from learning_analytics.analytics import to_iterable_module_id, get_module_consu
 from track.backends.django import TrackingLog
 #Codigo J. Antonio Gascon
 from courseware.courses import get_course_by_id
-
+import unicodedata
 from json import dumps
 from xmodule.modulestore.django import modulestore
 from opaque_keys.edx.locator import CourseLocator, BlockUsageLocator
@@ -133,7 +133,7 @@ def index(request, course_id):
     problem_ids_str=[]
     for descriptor in video_descriptors:
         video_ids_str.append((course_key.make_usage_key('video', descriptor.location.name))._to_string())
-        course_video_names.append(descriptor.display_name_with_default)
+        course_video_names.append(unicodedata.normalize('NFKD', descriptor.display_name_with_default).encode('ASCII', 'ignore'))
     if len(video_descriptors) > 0:
         first_video_id = course_key.make_usage_key('video', video_descriptors[0].location.name)
         # Video progress visualization. Video percentage seen total and non-overlapped.
@@ -179,7 +179,10 @@ def index(request, course_id):
     problem_names_sorted = [x.display_name_with_default.encode('utf-8') for x in problems_in]
     orden=[]
     orden.append(i for i, x in enumerate(problem_names_sorted))
-    problem_ids_str=problem_names_sorted
+    problem_ids_str=list(problem_names_sorted)
+    for n in range(len(problem_names_sorted)):
+        problem_names_sorted[n]= unicodedata.normalize('NFKD', unicode(problem_names_sorted[n],'utf-8')).encode('ASCII', 'ignore')
+        problem_ids_str[n]= unicodedata.normalize('NFKD', unicode(problem_ids_str[n],'utf-8')).encode('ASCII', 'ignore')
     user_val=1
     # Daily time spent on video and/or problem resources
     video_days, video_daily_time = get_daily_consumption(user_for_charts, course_key, 'video')
