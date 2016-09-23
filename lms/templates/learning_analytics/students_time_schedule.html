@@ -25,9 +25,14 @@
 		</p>
 		<br/>
 		<h5>Options</h5>
-		<select id="students_schedule_options">
+		<form class="inputtype option-input ">
+		<select class="chzn-select" id="students_schedule_options">
 			<option value="all" selected>All students</option>
-			<option value="student">Select student</option>
+			<optgroup value="student" label="Students">
+			  % for student in students:
+				<option value="${student['id']}">${student['name']}</option>
+			  % endfor
+			</optgroup>
 		</select>
 		% else:
 		<p>
@@ -57,3 +62,9 @@
 		</ul>
 	</div>
 </section>
+
+<script type="text/javascript">
+$(function() {
+    $(".chzn-select").chosen();
+});
+</script>

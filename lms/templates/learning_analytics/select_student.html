@@ -1,12 +1,14 @@
 <%! from django.utils.translation import ugettext as _ %>
 <%page args="select_id, usernames_in"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.4.2/chosen.jquery.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.4.2/chosen.css">
 
 % if staff_access:
 <form class="inputtype option-input ">
-  <select id="${select_id}">
+  <select class="chzn-select" id="${select_id}">
     <option value="&#35;average" selected>All students</option>
     <optgroup label="Students">
-      % for student in names_students:
+      % for student in usernames_in:
       <option${_(" value=\"{stu}\">{stu}").format(stu=student)}</option>
       % endfor
     </optgroup>
@@ -19,3 +21,9 @@
 ${staff_access}
 ${usernames_in}
 </%doc>
+
+<script type="text/javascript">
+$(function() {
+    $(".chzn-select").chosen();
+});
+</script>

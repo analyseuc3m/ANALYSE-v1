@@ -43,9 +43,6 @@ var LA_chapter_time = (function(){
 	                var chapt = parseFloat((time_json[i]['total_time'] - graded - ungraded).toFixed(2));
 
 					time_array.push([time_json[i]['name'],graded, ungraded,chapt]);
-					console.log('time_json');
-	                console.log(time_json);
-	                console.log(time_json[i]['total_time']);
 					if(time_json[i]['total_time'] > 0){
 						empty = false;
 					}
@@ -126,30 +123,14 @@ var LA_chapter_time = (function(){
 		if(SU_ACCESS){
 			var selectOptions = document.getElementById('chapter_time_options');
 			var selectStudent = document.getElementById('chapter_time_student');
-			var selectGroup = document.getElementById('chapter_time_group');
 			var selection = selectOptions.options[selectOptions.selectedIndex].value;
-				
-			switch(selection){
-				case "all":
-					selectStudent.style.display="none";
-					selectGroup.style.display="none";
-					return ALL_STUDENTS;
-				case "student":
-					selectStudent.style.display="";
-					selectGroup.style.display="none";
-					return selectStudent.options[selectStudent.selectedIndex].value;
-				case "group":
-					selectStudent.style.display="none";
-					selectGroup.style.display="";
-					switch(selectGroup.options[selectGroup.selectedIndex].value){
-						case "prof":
-							return PROF_GROUP;
-						case "pass":
-							return PASS_GROUP;
-						case "fail":
-							return FAIL_GROUP;
-					}
-			}		
+			if(selection=="all"){
+			    selectStudent.style.display="none";
+				return ALL_STUDENTS;
+			}else{
+			    selectStudent.style.display="none";
+				return selectOptions.options[selectOptions.selectedIndex].value;
+			}
 		}else{
 			return USER_ID;
 		}
@@ -160,40 +141,23 @@ var LA_chapter_time = (function(){
 		// Set selectors callbacks
 		var selectOptions = document.getElementById('chapter_time_options');
 		var selectStudent = document.getElementById('chapter_time_student');
-		var selectGroup = document.getElementById('chapter_time_group');
 			
 		selectOptions.onchange = function(){
 			var selection = selectOptions.options[selectOptions.selectedIndex].value;
-			
-			switch(selection){
-				case "all":
-					selectStudent.style.display="none";
-					selectGroup.style.display="none";
-					updateChart();
-					break;
-				case "student":
-					selectStudent.style.display="";
-					selectGroup.style.display="none";
-					updateChart();
-					break;
-				case "group":
-					selectStudent.style.display="none";
-					selectGroup.style.display="";
-					updateChart();
-					break;
+			if(selection=="all"){
+			    selectStudent.style.display="none";
+				updateChart();
+			}else{
+			    selectStudent.style.display="none";
+				updateChart();
 			}
 			if(!SU_ACCESS){
 				selectOptions.style.display="none";
 				selectStudent.style.display="none";
-				selectGroup.style.display="none";
 			}
 		};
 		
 		selectStudent.onchange = function(){
-			updateChart();
-		};
-		
-		selectGroup.onchange = function(){
 			updateChart();
 		};
 	};

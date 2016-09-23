@@ -12,8 +12,6 @@ google.setOnLoadCallback(
     localStorage.setItem('selectuser',JSON.stringify(selectUser));
     localStorage.setItem('dateJSONevents',JSON.stringify(${scatter_array}));
     //var selectUser = JSON.parse(localStorage['selectuser']);
-    console.log(selectUser);
-    console.log(${scatter_array});
     //localStorage['selectuser'] = JSON.stringify(${user_for_charts})
     if(selectUser=='#average'){
             drawChart6_2(${scatter_array});
@@ -159,8 +157,6 @@ function drawChart6_2(json_data) {
             $('.google-visualization-tooltip-item:eq(0)').remove() // remove the other info
         }
     })
-    console.log("JSON_EVENTS");
-    console.log(json_eventos);
     chart.draw(data, options);
 
   } else {

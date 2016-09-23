@@ -12,7 +12,12 @@ var LA_course_accesses = (function(){
     var EXPAND_SEQ = 1;
     var EXPAND_VERT = 2;
     var colorDef=document.getElementById('courActivity').value;
-    var DEFAULT_COLORS = [colorDef,colorDef,colorDef];
+    var DEFAULT_COLORS = [colorDef,colorDef,colorDef,colorDef,colorDef,
+					  colorDef,colorDef,colorDef,colorDef,colorDef,
+					  colorDef,colorDef,colorDef,colorDef,colorDef,
+					  colorDef,colorDef,colorDef,colorDef,colorDef,
+					  colorDef,colorDef,colorDef,colorDef,colorDef,
+					  colorDef];
 	var DEFAULT_TITLE = 'Chapters accesses';
     
 	var ca_json = null;
@@ -186,30 +191,14 @@ var LA_course_accesses = (function(){
 		if(SU_ACCESS){
 			var selectOptions = document.getElementById('course_accesses_options');
 			var selectStudent = document.getElementById('course_accesses_student');
-			var selectGroup = document.getElementById('course_accesses_group');
 			var selection = selectOptions.options[selectOptions.selectedIndex].value;
-				
-			switch(selection){
-				case "all":
-					selectStudent.style.display="none";
-					selectGroup.style.display="none";
-					return ALL_STUDENTS;
-				case "student":
-					selectStudent.style.display="";
-					selectGroup.style.display="none";
-					return selectStudent.options[selectStudent.selectedIndex].value;
-				case "group":
-					selectStudent.style.display="none";
-					selectGroup.style.display="";
-					switch(selectGroup.options[selectGroup.selectedIndex].value){
-						case "prof":
-							return PROF_GROUP;
-						case "pass":
-							return PASS_GROUP;
-						case "fail":
-							return FAIL_GROUP;
-					}
-			}		
+			if(selection=="all"){
+				selectStudent.style.display="none";
+				return ALL_STUDENTS;
+			}else{
+			    selectStudent.style.display="none";
+				return selectOptions.options[selectOptions.selectedIndex].value;
+			}
 		}else{
 			return USER_ID;
 		}
@@ -220,40 +209,22 @@ var LA_course_accesses = (function(){
 		// Set selectors callbacks
 		var selectOptions = document.getElementById('course_accesses_options');
 		var selectStudent = document.getElementById('course_accesses_student');
-		var selectGroup = document.getElementById('course_accesses_group');
-			
 		selectOptions.onchange = function(){
 			var selection = selectOptions.options[selectOptions.selectedIndex].value;
-			
-			switch(selection){
-				case "all":
-					selectStudent.style.display="none";
-					selectGroup.style.display="none";
-					updateChart();
-					break;
-				case "student":
-					selectStudent.style.display="";
-					selectGroup.style.display="none";
-					updateChart();
-					break;
-				case "group":
-					selectStudent.style.display="none";
-					selectGroup.style.display="";
-					updateChart();
-					break;
+			if(selection=="all"){
+			    selectStudent.style.display="none";
+				updateChart();
+			}else{
+			    selectStudent.style.display="none";
+				updateChart();
 			}
 			if(!SU_ACCESS){
 				selectOptions.style.display="none";
 				selectStudent.style.display="none";
-				selectGroup.style.display="none";
 			}
 		};
 		
 		selectStudent.onchange = function(){
-			updateChart();
-		};
-		
-		selectGroup.onchange = function(){
 			updateChart();
 		};
 	};

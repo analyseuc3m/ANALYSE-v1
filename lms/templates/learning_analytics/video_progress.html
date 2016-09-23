@@ -16,7 +16,7 @@
 	        This visualization shows in light orange the percentage of different video watched (it does not count if the same parts are watched several times, the max. is the 100% of the video) and in dark orange the percentage of total video watched (total amount of time spent compared to the length of the video in percentage).
 	    </p>
 	    % endif                                                           
-	    <%include file="/learning_analytics/select_student.html" args="select_id='student_select1', usernames_in=usernames_in" />
+	    <%include file="/learning_analytics/select_student.html" args="select_id='student_select1', usernames_in=names_students" />
 	    <h5>Range of videos</h5>
         <%include file="/learning_analytics/select_range_videos.html" args="select_id='video_select1', video_names=video_names, video_ids=video_ids" />
 	</div>

@@ -59,8 +59,6 @@ var LA_student_grades = (function(){
 					wss_array.push([wss[i]['category'], percent*100, color]);
 				}
 				data = wss_array;
-				console.log('wss_array');
-				console.log(wss_array);
 				document.getElementById('students_grades_legend_title').innerHTML = DEFAULT_TITLE;
 				
 				// Select callbacks
@@ -69,6 +67,9 @@ var LA_student_grades = (function(){
 		}
 		options = {
 			legend: {position: 'none'},
+			hAxis: {
+					viewWindow: {max: 100,
+								 min: 0},},
 		};
 			
 		var dt = google.visualization.arrayToDataTable(data);
@@ -188,30 +189,14 @@ var LA_student_grades = (function(){
 		if(SU_ACCESS){
 			var selectOptions = document.getElementById('students_grades_options');
 			var selectStudent = document.getElementById('students_grades_student');
-			var selectGroup = document.getElementById('students_grades_group');
 			var selection = selectOptions.options[selectOptions.selectedIndex].value;
-				
-			switch(selection){
-				case "all":
-					selectStudent.style.display="none";
-					selectGroup.style.display="none";
-					return ALL_STUDENTS;
-				case "student":
-					selectStudent.style.display="";
-					selectGroup.style.display="none";
-					return selectStudent.options[selectStudent.selectedIndex].value;
-				case "group":
-					selectStudent.style.display="none";
-					selectGroup.style.display="";
-					switch(selectGroup.options[selectGroup.selectedIndex].value){
-						case "prof":
-							return PROF_GROUP;
-						case "pass":
-							return PASS_GROUP;
-						case "fail":
-							return FAIL_GROUP;
-					}
-			}		
+		    if(selection=="all"){
+                selectStudent.style.display="none";
+				return ALL_STUDENTS;
+			}else{
+			    selectStudent.style.display="none";
+				return selectOptions.options[selectOptions.selectedIndex].value;
+			}
 		}else{
 			return USER_ID;
 		}
@@ -222,42 +207,27 @@ var LA_student_grades = (function(){
 		// Set selectors callbacks
 		var selectOptions = document.getElementById('students_grades_options');
 		var selectStudent = document.getElementById('students_grades_student');
-		var selectGroup = document.getElementById('students_grades_group');
 			
 		selectOptions.onchange = function(){
 			var selection = selectOptions.options[selectOptions.selectedIndex].value;
-			
-			switch(selection){
-				case "all":
-					selectStudent.style.display="none";
-					selectGroup.style.display="none";
-					updateChart();
-					break;
-				case "student":
-					selectStudent.style.display="";
-					selectGroup.style.display="none";
-					updateChart();
-					break;
-				case "group":
-					selectStudent.style.display="none";
-					selectGroup.style.display="";
-					updateChart();
-					break;
+			if(selection=="all"){
+                selectStudent.style.display="none";
+                updateChart();
+			}else{
+			    selectStudent.style.display="none";
+				updateChart();
 			}
 			if(!SU_ACCESS){
 				selectOptions.style.display="none";
 				selectStudent.style.display="none";
-				selectGroup.style.display="none";
+
 			}
 		};
 		
 		selectStudent.onchange = function(){
 			updateChart();
 		};
-		
-		selectGroup.onchange = function(){
-			updateChart();
-		};
+
 	};
 	
 	var change_data = function(){

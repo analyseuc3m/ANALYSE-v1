@@ -38,14 +38,14 @@ var LA_course_sort_students = (function(){
                 gs = all_sections['graded_sections'];
 
                 // Make data array
-                wss_array = [['Category','Not Done','Fail','Pass','Proficiency'],];
+                wss_array = [['Category','Proficiency','Pass','Fail','Not Done'],];
                 for(var i = 0; i < wss.length; i++){
-                    var total = wss[i]['NOT'] + wss[i]['FAIL'] + wss[i]['OK'] + wss[i]['PROFICIENCY'];
+                    var total = wss[i]['PROFICIENCY'] + wss[i]['OK'] + wss[i]['FAIL'] + wss[i]['NOT'];
                     wss_array.push([wss[i]['category'],
-                        (wss[i]['NOT']/total)*100,
-                        (wss[i]['FAIL']/total)*100,
+                        (wss[i]['PROFICIENCY']/total)*100,
                         (wss[i]['OK']/total)*100,
-                        (wss[i]['PROFICIENCY']/total)*100]
+                        (wss[i]['FAIL']/total)*100,
+                        (wss[i]['NOT']/total)*100]
                     );
                 }
 
@@ -53,7 +53,7 @@ var LA_course_sort_students = (function(){
                 data = wss_array;
                 // Options
                 options = {
-                    colors: [COLOR_NOT, COLOR_FAIL, COLOR_OK, COLOR_PROF],
+                    colors: [COLOR_PROF, COLOR_OK, COLOR_FAIL, COLOR_NOT],
                     legend: {position: 'none'},
                     isStacked: true,
                 };
@@ -107,16 +107,15 @@ var LA_course_sort_students = (function(){
 		}else{
 			var category = wss[row]['category'];
 		}
-		cat_array = [[category,'Not Done','Fail','Pass','Proficiency'],];
-		
+		cat_array = [[category,'Proficiency','Pass','Fail','Not Done'],];
 		for(var i = 0; i < gs.length; i++){
 			if (isTotal || gs[i]['category'] == category){
-				var total = gs[i]['NOT'] + gs[i]['FAIL'] + gs[i]['OK'] + gs[i]['PROFICIENCY'];
+				var total = gs[i]['PROFICIENCY'] + gs[i]['OK'] + gs[i]['FAIL'] + gs[i]['NOT'];
 				cat_array.push([gs[i]['label'],
-					(gs[i]['NOT']/total)*100,
-					(gs[i]['FAIL']/total)*100,
+					(gs[i]['PROFICIENCY']/total)*100,
 					(gs[i]['OK']/total)*100,
-					(gs[i]['PROFICIENCY']/total)*100]
+					(gs[i]['FAIL']/total)*100,
+					(gs[i]['NOT']/total)*100]
 				);
 			}
 		}

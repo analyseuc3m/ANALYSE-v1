@@ -3,7 +3,7 @@
 
 % if video_names is not None:
 <form class="inputtype option-input ">
-  <select id="${select_id}">
+  <select class="chzn-select" id="${select_id}">
     % for video_name, video_id in zip(video_names, video_ids):
     <option${_(" value=\"{vid_id}\">{vid}").format(vid=video_name, vid_id=video_id)}</option>
     % endfor
@@ -12,3 +12,9 @@
 % else:
 <p> This course contains no videos. </p>
 % endif
+
+<script type="text/javascript">
+$(function() {
+    $(".chzn-select").chosen();
+});
+</script>

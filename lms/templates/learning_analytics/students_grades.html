@@ -25,32 +25,31 @@
 		</p>
 		<br/>
 		<h5>Options</h5>
-		<select id="students_grades_options">
+		<form class="inputtype option-input ">
+		<select class="chzn-select" id="students_grades_options">
 			<option value="all" selected>All students</option>
-			<option value="student">Select student</option>
-			<option value="group">Select student group</option>
+			<optgroup value="student" label="Students">
+			  % for student in students:
+				<option value="${student['id']}">${student['name']}</option>
+			  % endfor
+			</optgroup>
 		</select>
 		% else:
 		<p>
 			This visualization shows your average grade in each category of resource in the course. Click on a bar in order to see the results decomposed in each item within the category.
 		</p>
+
 		<select id="students_grades_options" style='display:none'>
 			<option value="all">All students</option>
 			<option value="student" selected>Select student</option>
-			<option value="group">Select student group</option>
 		</select>
+
 		% endif
 		
 		<select id="students_grades_student" style='display:none'>
 			% for student in students:
 				<option value="${student['id']}">${student['name']}</option>
 			% endfor
-		</select>
-		
-		<select id="students_grades_group" style='display:none'>
-			<option value="prof">Proficiency students</option>
-			<option value="pass">Pass students</option>
-			<option value="fail">Fail students</option>
 		</select>
 	</div>
 	<!--Div that will hold the stacked bar chart-->
@@ -65,3 +64,10 @@
 		</ul>
 	</div>
 </section>
+% if instructor_access or staff_access:
+<script type="text/javascript">
+$(function() {
+    $(".chzn-select").chosen();
+});
+</script>
+%endif

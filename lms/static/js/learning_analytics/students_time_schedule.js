@@ -134,14 +134,12 @@ var LA_student_time_schedule = (function(){
 			var selectOptions = document.getElementById('students_schedule_options');
 			var selectStudent = document.getElementById('students_schedule_student');
 			var selection = selectOptions.options[selectOptions.selectedIndex].value;
-				
-			switch(selection){
-				case "all":
-					selectStudent.style.display="none";
-					return ALL_STUDENTS;
-				case "student":
-					selectStudent.style.display="";
-					return selectStudent.options[selectStudent.selectedIndex].value;
+			if (selection=="all"){
+			    selectStudent.style.display="none";
+				return ALL_STUDENTS;
+			}else{
+			    selectStudent.style.display="none";
+				return selectOptions.options[selectOptions.selectedIndex].value;
 			}
 		}else{
 			//alert("NO ACCESS");
@@ -157,16 +155,12 @@ var LA_student_time_schedule = (function(){
 			
 		selectOptions.onchange = function(){
 			var selection = selectOptions.options[selectOptions.selectedIndex].value;
-			
-			switch(selection){
-				case "all":
-					selectStudent.style.display="none";
-					updateChart();
-					break;
-				case "student":
-					selectStudent.style.display="";
-					updateChart();
-					break;
+			if(selection=="all"){
+			    selectStudent.style.display="none";
+				updateChart();
+			}else{
+			    selectStudent.style.display="none";
+				updateChart();
 			}
 			if(!SU_ACCESS){
 				selectOptions.style.display="none";
